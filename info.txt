@@ -1,0 +1,314 @@
+# SPEC.md - Sistema de Gestión para Resto-Bar/Confitería
+
+## 1. Project Overview
+
+**Nombre del Proyecto:** Piso0 - Sistema de Gestión para Resto-Bar
+
+**Tipo de Aplicación:** Sistema web completo con doble rol (Admin/Cliente)
+
+**Funcionalidad Principal:** Plataforma integral para gestión de pedidos, inventario, contabilidad y atención al cliente mediante código QR por mesa.
+
+**Usuarios Objetivo:**
+- Administrador/Dueño del local
+- Clientes del restobar
+
+---
+
+## 2. Architecture
+
+### Stack Tecnológico
+- **Frontend:** React + TypeScript + Vite
+- **Backend:** Node.js + Express
+- **Base de Datos:** SQLite (para simplicidad) / PostgreSQL (producción)
+- **Tiempo Real:** Socket.io
+- **Autenticación:** JWT con Google OAuth opcional
+- **QR Generation:** qrcode library
+- **Pagos:** Integración con MercadoPago (simulado)
+
+### Estructura del Proyecto
+```
+/Piso0
+├── client/                 # Frontend React
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── hooks/
+│   │   ├── context/
+│   │   ├── services/
+│   │   └── types/
+│   └── package.json
+├── server/                 # Backend Node.js
+│   ├── src/
+│   │   ├── routes/
+│   │   ├── controllers/
+│   │   ├── models/
+│   │   ├── middleware/
+│   │   ├── services/
+│   │   └── socket/
+│   └── package.json
+└── README.md
+```
+
+---
+
+## 3. Data Models
+
+### Usuario
+```typescript
+{
+  id: string;
+  email: string;
+  password: string; // hash
+  nombre: string;
+  rol: 'admin' | 'cliente';
+  googleId?: string;
+  fechaCreacion: Date;
+}
+```
+
+### Producto
+```typescript
+{
+  id: string;
+  nombre: string;
+  descripcion: string;
+  precio: number;
+  categoria: 'bebida' | 'comida' | 'postre' | 'otro';
+  imagen?: string;
+  stock: number;
+  stockMinimo: number;
+  disponible: boolean;
+  fechaCreacion: Date;
+}
+```
+
+### Mesa
+```typescript
+{
+  id: string;
+  numero: number;
+  codigoQR: string;
+  capacidad: number;
+  estado: 'libre' | 'ocupada' | 'reservada';
+  posicionX?: number;
+  posicionY?: number;
+}
+```
+
+### Pedido
+```typescript
+{
+  id: string;
+  mesaId: string;
+  clienteId: string;
+  items: PedidoItem[];
+  estado: 'pendiente' | 'preparando' | 'listo' | 'entregado' | 'cancelado';
+  tipoPago?: 'efectivo' | 'tarjeta' | 'mercadopago' | 'qr';
+  total: number;
+  fechaPedido: Date;
+  fechaEntrega?: Date;
+}
+```
+
+### PedidoItem
+```typescript
+{
+  productoId: string;
+  productoNombre: string;
+  cantidad: number;
+  precioUnitario: number;
+  notas?: string;
+}
+```
+
+### Transaccion (Contabilidad)
+```typescript
+{
+  id: string;
+  tipo: 'ingreso' | 'gasto';
+  categoria: string;
+  monto: number;
+  descripcion: string;
+  fecha: Date;
+  pedidoId?: string;
+}
+```
+
+---
+
+## 4. Functionality Specification
+
+### 4.1 MODO ADMINISTRADOR
+
+#### Authentication
+- Login con email/contraseña
+- Panel de control separado del panel cliente
+
+#### Gestión de Productos (ABM)
+- **Alta:** Formulario para crear nuevo producto con nombre, descripción, precio, categoría, stock, imagen
+- **Baja:** Eliminación lógica (soft delete) de productos
+- **Modificación:** Editar cualquier campo del producto
+- **Listado:** Tabla con filtros por categoría, búsqueda, ordenamiento
+- **Stock:** Alertas visuales cuando stock < stockMinimo
+
+#### Gestión de Mesas
+- Crear mesas con número y capacidad
+- Generar código QR único por mesa
+- Visualizar estado de mesas (libre/ocupada)
+- Eliminar mesas
+
+#### Gestión de Pedidos (Comanda)
+- Ver pedidos en tiempo real por mesa
+- Cambiar estado del pedido (pendiente → preparando → listo → entregado)
+- Notificaciones en tiempo real
+- Historial de pedidos por fecha
+
+#### Contabilidad
+- **Ingresos:** Registrados automáticamente por pedidos pagados
+- **Gastos:** Registro manual de gastos (insumos, servicios, etc.)
+- **Reportes:** Resumen diario/semanal/mensual
+- **Gráficos:** Visualización de ingresos vs gastos
+
+#### Dashboard
+- Pedidos activos
+- Mesas ocupadas
+- Stock bajo
+- Ingresos del día
+
+### 4.2 MODO CLIENTE
+
+#### Autenticación
+- Registro con email/contraseña
+- Login con Google (OAuth)
+- Login con email/contraseña
+
+#### Flujo del Cliente
+1. **Escanear QR:** El QR contiene el ID de la mesa
+2. **Identificación:** Login/registro si no está autenticado
+3. **Menú:** Ver productos por categorías
+4. **Armar Pedido:** Seleccionar productos, cantidad, notas
+5. **Enviar Pedido:** Se envía a la comanda
+6. **Seguir Pedido:** Ver estado en tiempo real
+7. **Pago:** Seleccionar método de pago
+8. **Solicitar Mozo:** Botón para llamar al mozo
+
+#### Métodos de Pago Soportados
+- Efectivo
+- Tarjeta de crédito/débito
+- MercadoPago (QR)
+- Transferencia
+
+---
+
+## 5. API Endpoints
+
+### Auth
+- `POST /api/auth/register` - Registro
+- `POST /api/auth/login` - Login
+- `POST /api/auth/google` - Login con Google
+- `GET /api/auth/me` - Obtener usuario actual
+
+### Productos
+- `GET /api/productos` - Listar productos
+- `GET /api/productos/:id` - Obtener producto
+- `POST /api/productos` - Crear producto
+- `PUT /api/productos/:id` - Actualizar producto
+- `DELETE /api/productos/:id` - Eliminar producto
+
+### Mesas
+- `GET /api/mesas` - Listar mesas
+- `GET /api/mesas/:id` - Obtener mesa
+- `POST /api/mesas` - Crear mesa
+- `PUT /api/mesas/:id` - Actualizar mesa
+- `DELETE /api/mesas/:id` - Eliminar mesa
+- `GET /api/mesas/:id/qr` - Generar QR de mesa
+
+### Pedidos
+- `GET /api/pedidos` - Listar pedidos (admin)
+- `GET /api/pedidos/mesa/:mesaId` - Pedidos por mesa
+- `POST /api/pedidos` - Crear pedido
+- `PUT /api/pedidos/:id/estado` - Actualizar estado
+- `POST /api/pedidos/:id/pago` - Registrar pago
+
+### Transacciones
+- `GET /api/transacciones` - Listar transacciones
+- `POST /api/transacciones` - Crear transacción (gasto)
+- `GET /api/transacciones/resumen` - Resumen contable
+
+---
+
+## 6. Real-time Events (Socket.io)
+
+### Server → Client
+- `nuevo-pedido`: Cuando un cliente hace un pedido
+- `pedido-actualizado`: Cuando cambia el estado
+- `mozo-solicitado`: Cuando un cliente llama al mozo
+- `mesa-actualizada`: Cambio de estado de mesa
+
+### Client → Server
+- `join-mesa`: Unirse a la sala de una mesa
+- `nuevo-pedido`: Enviar pedido
+- `solicitar-mozo`: Llamar al mozo
+
+---
+
+## 7. UI/UX Specification
+
+### Paleta de Colores
+- **Primario:** #1A1A2E (Azul oscuro)
+- **Secundario:** #16213E (Azul más claro)
+- **Acento:** #E94560 (Rojo/Coral)
+- **Fondo:** #0F0F1A (Muy oscuro)
+- **Texto:** #FFFFFF (Blanco)
+- **Texto secundario:** #A0A0A0 (Gris)
+- **Éxito:** #4CAF50 (Verde)
+- **Advertencia:** #FF9800 (Naranja)
+- **Error:** #F44336 (Rojo)
+
+### Tipografía
+- **Encabezados:** "Poppins", sans-serif
+- **Cuerpo:** "Inter", sans-serif
+- **Tamaños:**
+  - H1: 2.5rem
+  - H2: 2rem
+  - H3: 1.5rem
+  - Body: 1rem
+  - Small: 0.875rem
+
+### Responsive
+- Mobile: < 768px
+- Tablet: 768px - 1024px
+- Desktop: > 1024px
+
+---
+
+## 8. Acceptance Criteria
+
+### Admin
+- [ ] Puede iniciar sesión
+- [ ] Puede crear productos con todos los campos
+- [ ] Puede modificar productos existentes
+- [ ] Puede eliminar productos
+- [ ] Puede ver alertas de stock bajo
+- [ ] Puede crear mesas y generar QR
+- [ ] Puede ver pedidos en tiempo real
+- [ ] Puede cambiar estado de pedidos
+- [ ] Puede registrar gastos
+- [ ] Puede ver resumen de ingresos/gastos
+
+### Cliente
+- [ ] Puede escanear QR y acceder a la mesa
+- [ ] Puede registrarse e iniciar sesión
+- [ ] Puede iniciar sesión con Google
+- [ ] Puede ver el menú por categorías
+- [ ] Puede agregar productos al pedido
+- [ ] Puede enviar el pedido
+- [ ] Puede ver el estado de su pedido
+- [ ] Puede seleccionar método de pago
+- [ ] Puede solicitar mozo
+
+### General
+- [ ] Los pedidos aparecen en tiempo real en la comanda
+- [ ] El stock se descuenta al confirmar pedido
+- [ ] Los ingresos se registran automáticamente
+- [ ] La aplicación es responsive
