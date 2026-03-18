@@ -27,6 +27,23 @@ exports.create = async (req, res) => {
   try {
     const { tipo, categoria, monto, descripcion } = req.body;
 
+    if (categoria === 'Apertura') {
+      const hoy = new Date();
+      const inicioDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0, 0);
+      const finDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59, 999);
+      
+      const aperturaExistente = await Transaccion.findOne({
+        where: {
+          categoria: 'Apertura',
+          createdAt: { [require('sequelize').Op.between]: [inicioDia, finDia] }
+        }
+      });
+      
+      if (aperturaExistente) {
+        return res.status(400).json({ error: 'Ya existe una apertura para el día de hoy' });
+      }
+    }
+
     const transaccion = await Transaccion.create({
       tipo,
       categoria,
@@ -65,7 +82,8 @@ exports.getResumen = async (req, res) => {
 
     const transacciones = await Transaccion.findAll({
       where: {
-        createdAt: { [Op.gte]: fechaInicio }
+        createdAt: { [Op.gte]: fechaInicio },
+        categoria: { [require('sequelize').Op.ne]: 'Cierre' }
       }
     });
 
@@ -132,7 +150,14 @@ exports.cierreDia = async (req, res) => {
       }
     });
 
-    await Mesa.update({ estado: 'libre' }, { where: { estado: 'ocupada' } });
+    const cierreTransaccion = await Transaccion.create({
+      tipo: 'ingreso',
+      categoria: 'Cierre',
+      monto: balance,
+      descripcion: `Cierre del día ${fecha} - Ingresos: $${ingresos}, Gastos: $${gastos}`
+    });
+
+    await Mesa.update({ estado: 'libre' }, { where: { estado: { [require('sequelize').Op.in]: ['ocupada', 'disponible'] } } });
 
     req.io.emit('cierre-dia');
 
@@ -141,7 +166,8 @@ exports.cierreDia = async (req, res) => {
       ingresos,
       gastos,
       balance,
-      pedidos: pedidosDia.length
+      pedidos: pedidosDia.length,
+      cierreId: cierreTransaccion.id
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -209,11 +235,12 @@ exports.getHistorialComandas = async (req, res) => {
 exports.getEstadoDia = async (req, res) => {
   try {
     const hoy = new Date();
-    const inicioDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+    const inicioDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0, 0);
+    const finDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59, 999);
     
     const transacciones = await Transaccion.findAll({
       where: {
-        createdAt: { [Op.gte]: inicioDia }
+        createdAt: { [require('sequelize').Op.between]: [inicioDia, finDia] }
       }
     });
     

@@ -22,7 +22,12 @@ const io = new Server(server, {
   }
 });
 
-app.use(cors());
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+
+app.use(cors({
+  origin: CLIENT_URL,
+  credentials: true
+}));
 app.use(express.json());
 
 app.use((req, res, next) => {
@@ -35,6 +40,13 @@ app.use('/api/productos', productoRoutes);
 app.use('/api/mesas', mesaRoutes);
 app.use('/api/pedidos', pedidoRoutes);
 app.use('/api/transacciones', transaccionRoutes);
+
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../../client/dist')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+  });
+}
 
 io.on('connection', (socket) => {
   console.log('Cliente conectado:', socket.id);
@@ -64,34 +76,57 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 8000;
 
-sequelize.sync({ force: false }).then(async () => {
-  console.log('Base de datos sincronizada');
-  
-  const Pedido = require('./models/Pedido');
-  
-  await sequelize.query('ALTER TABLE Pedidos ADD COLUMN transaccionCreada BOOLEAN DEFAULT 0').catch(() => {});
-  await sequelize.query('ALTER TABLE Pedidos ADD COLUMN deliveryInfo TEXT').catch(() => {});
-  await sequelize.query('ALTER TABLE Pedidos ADD COLUMN tipoPedido TEXT').catch(() => {});
-  await sequelize.query('ALTER TABLE Usuarios ADD COLUMN telefono TEXT').catch(() => {});
-  await sequelize.query('ALTER TABLE Usuarios ADD COLUMN direccion TEXT').catch(() => {});
-  await sequelize.query('ALTER TABLE Usuarios ADD COLUMN verificado BOOLEAN DEFAULT 0').catch(() => {});
-  
-  const Usuario = require('./models/Usuario');
-  const adminExists = await Usuario.findOne({ where: { email: 'admin@piso0.com' } });
-  
-  if (!adminExists) {
-    await Usuario.create({
-      email: 'admin@piso0.com',
-      password: 'admin123',
-      nombre: 'Administrador',
-      rol: 'admin'
-    });
-    console.log('Usuario admin creado: admin@piso0.com / admin123');
-  }
+const syncDatabase = async () => {
+  try {
+    await sequelize.sync({ force: false });
+    console.log('Base de datos sincronizada');
+    
+    const Pedido = require('./models/Pedido');
+    const { DataTypes } = require('sequelize');
+    
+    try {
+      await sequelize.query('ALTER TABLE "Pedidos" ADD COLUMN "transaccionCreada" BOOLEAN DEFAULT false');
+    } catch (e) {}
+    try {
+      await sequelize.query('ALTER TABLE "Pedidos" ADD COLUMN "deliveryInfo" TEXT');
+    } catch (e) {}
+    try {
+      await sequelize.query('ALTER TABLE "Pedidos" ADD COLUMN "tipoPedido" TEXT');
+    } catch (e) {}
+    try {
+      await sequelize.query('ALTER TABLE "Usuarios" ADD COLUMN "telefono" TEXT');
+    } catch (e) {}
+    try {
+      await sequelize.query('ALTER TABLE "Usuarios" ADD COLUMN "direccion" TEXT');
+    } catch (e) {}
+    try {
+      await sequelize.query('ALTER TABLE "Usuarios" ADD COLUMN "verificado" BOOLEAN DEFAULT false');
+    } catch (e) {}
+    
+    const Usuario = require('./models/Usuario');
+    const adminExists = await Usuario.findOne({ where: { email: 'admin@piso0.com' } });
+    
+    if (!adminExists) {
+      await Usuario.create({
+        email: 'admin@piso0.com',
+        password: 'admin123',
+        nombre: 'Administrador',
+        rol: 'admin'
+      });
+      console.log('Usuario admin creado: admin@piso0.com / admin123');
+    }
 
-  server.listen(PORT, () => {
-    console.log(`Servidor corriendo en puerto ${PORT}`);
-  });
-}).catch(err => {
-  console.error('Error al sincronizar base de datos:', err);
+    return true;
+  } catch (err) {
+    console.error('Error al sincronizar base de datos:', err);
+    return false;
+  }
+};
+
+syncDatabase().then(success => {
+  if (success) {
+    server.listen(PORT, () => {
+      console.log(`Servidor corriendo en puerto ${PORT}`);
+    });
+  }
 });

@@ -17,6 +17,8 @@ export default function AdminContabilidad() {
   const [showModalPago, setShowModalPago] = useState(false);
   const [showModalCierre, setShowModalCierre] = useState(false);
   const [showModalApertura, setShowModalApertura] = useState(false);
+  const [showModalIngreso, setShowModalIngreso] = useState(false);
+  const [formIngreso, setFormIngreso] = useState({ monto: '', descripcion: '' });
   const [historial, setHistorial] = useState([]);
   const [historialComandas, setHistorialComandas] = useState([]);
   const [mostrarHistorial, setMostrarHistorial] = useState(false);
@@ -47,6 +49,7 @@ export default function AdminContabilidad() {
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const [resumenRes, transaccionesRes, pedidosRes, mesasRes, estadoRes] = await Promise.all([
         api.get(`/transacciones/resumen?periodo=${periodo}`),
         api.get('/transacciones'),
@@ -130,6 +133,24 @@ export default function AdminContabilidad() {
     }
   };
 
+  const registrarIngreso = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/transacciones', {
+        tipo: 'ingreso',
+        categoria: 'Ingreso',
+        monto: formIngreso.monto,
+        descripcion: formIngreso.descripcion || 'Ingreso a caja'
+      });
+      addToast('Ingreso registrado correctamente', 'success');
+      setShowModalIngreso(false);
+      setFormIngreso({ monto: '', descripcion: '' });
+      fetchData();
+    } catch (err) {
+      addToast(err.response?.data?.error || 'Error al registrar', 'error');
+    }
+  };
+
   const registrarPago = async (e) => {
     e.preventDefault();
     if (!pedidoSeleccionado) return;
@@ -196,25 +217,45 @@ export default function AdminContabilidad() {
         </div>
         <div className="flex gap-10">
           <Link to="/admin" className="btn btn-secondary">← Volver</Link>
+          <button onClick={fetchData} className="btn btn-secondary">🔄 Actualizar</button>
           <button onClick={fetchHistorialComandas} className="btn btn-secondary">📋 Comandas</button>
           <button onClick={fetchHistorial} className="btn btn-secondary">💰 Cierres</button>
-          <button 
-            onClick={() => setShowModalApertura(true)} 
-            className="btn btn-success"
-            disabled={estadoDia.tieneApertura && !estadoDia.tieneCierre}
-            style={{ opacity: estadoDia.tieneApertura && !estadoDia.tieneCierre ? 0.5 : 1 }}
-          >
-            {estadoDia.tieneApertura && !estadoDia.tieneCierre ? '🔓 Día Abierto' : '🔓 Apertura'}
-          </button>
-          <button 
-            onClick={() => setShowModalCierre(true)} 
-            className="btn btn-warning"
-            disabled={!estadoDia.tieneApertura || estadoDia.tieneCierre}
-            style={{ opacity: !estadoDia.tieneApertura || estadoDia.tieneCierre ? 0.5 : 1 }}
-          >
-            {estadoDia.tieneCierre ? '✅ Día Cerrado' : '🔒 Cerrar Día'}
-          </button>
-          <button onClick={() => setShowModal(true)} className="btn btn-primary">+ Registrar Gasto</button>
+          
+          {estadoDia.abierto ? (
+            <>
+              <button 
+                onClick={() => setShowModalCierre(true)} 
+                className="btn btn-warning"
+              >
+                🔒 Cerrar Día
+              </button>
+              <span style={{ padding: '8px 16px', background: 'var(--success)', borderRadius: '8px', color: 'white' }}>
+                ✅ Día Abierto
+              </span>
+            </>
+          ) : estadoDia.tieneCierre ? (
+            <>
+              <span style={{ padding: '8px 16px', background: 'var(--gold)', borderRadius: '8px', color: 'white' }}>
+                🔒 Día Cerrado
+              </span>
+              <button 
+                onClick={() => setShowModalApertura(true)} 
+                className="btn btn-success"
+              >
+                🔓 Nueva Apertura
+              </button>
+            </>
+          ) : (
+            <button 
+              onClick={() => setShowModalApertura(true)} 
+              className="btn btn-success"
+            >
+              🔓 Apertura de Caja
+            </button>
+          )}
+          
+          <button onClick={() => setShowModal(true)} className="btn btn-primary">+ Gasto</button>
+          <button onClick={() => setShowModalIngreso(true)} className="btn btn-success">+ Ingreso</button>
         </div>
       </div>
 
@@ -597,6 +638,49 @@ export default function AdminContabilidad() {
 
               <button type="submit" className="btn btn-success" style={{ width: '100%', marginTop: '16px' }}>
                 Confirmar Apertura
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showModalIngreso && (
+        <div className="modal-overlay" onClick={() => setShowModalIngreso(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>💰 Ingreso a Caja</h2>
+              <button onClick={() => setShowModalIngreso(false)} className="modal-close">×</button>
+            </div>
+
+            <p style={{ marginBottom: '20px' }}>
+              Registrá dinero que entra a caja (propinas, compensaciones, etc.)
+            </p>
+
+            <form onSubmit={registrarIngreso}>
+              <div className="form-group">
+                <label>Monto</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formIngreso.monto}
+                  onChange={e => setFormIngreso({ ...formIngreso, monto: e.target.value })}
+                  placeholder="Ej: 5000"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Descripción (opcional)</label>
+                <input
+                  type="text"
+                  value={formIngreso.descripcion}
+                  onChange={e => setFormIngreso({ ...formIngreso, descripcion: e.target.value })}
+                  placeholder="Ej: Propina, Compensación, etc."
+                />
+              </div>
+
+              <button type="submit" className="btn btn-success" style={{ width: '100%', marginTop: '16px' }}>
+                Confirmar Ingreso
               </button>
             </form>
           </div>
