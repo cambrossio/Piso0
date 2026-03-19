@@ -1,17 +1,17 @@
 import axios from 'axios';
 
-const getApiUrl = () => {
-  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL + '/api';
-  }
-  return '/api';
-};
+const API_URL = import.meta.env.VITE_API_URL 
+  ? `${import.meta.env.VITE_API_URL}/api` 
+  : '/api';
+
+console.log('API URL:', API_URL);
 
 const api = axios.create({
-  baseURL: getApiUrl(),
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  timeout: 15000
 });
 
 api.interceptors.request.use(config => {
@@ -25,6 +25,7 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
   response => response,
   error => {
+    console.error('API Error:', error.message);
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       window.location.href = '/login';

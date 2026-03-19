@@ -25,8 +25,10 @@ const io = new Server(server, {
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
 app.use(cors({
-  origin: [CLIENT_URL, 'https://piso0.vercel.app', /\.vercel\.app$/],
-  credentials: true
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 
