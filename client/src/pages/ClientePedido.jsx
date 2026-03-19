@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { socket, joinMesa, pedirCuenta } from '../services/socket';
 import { useToast } from '../components/Toast';
+import { useAuth } from '../context/AuthContext';
 
 export default function ClientePedido() {
   const { addToast } = useToast();
+  const { logout } = useAuth();
   const [mostrarRecibo, setMostrarRecibo] = useState(false);
   const [pedidos, setPedidos] = useState([]);
   const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
@@ -306,6 +308,19 @@ export default function ClientePedido() {
         style={{ width: '100%', marginTop: '12px' }}
       >
         ← Volver al Menú
+      </button>
+
+      <button 
+        onClick={() => {
+          localStorage.removeItem('mesaCodigoQR');
+          localStorage.removeItem('mesaNumero');
+          logout();
+          navigate('/login');
+        }} 
+        className="btn btn-secondary" 
+        style={{ width: '100%', marginTop: '8px' }}
+      >
+        Cerrar Sesión
       </button>
     </div>
   );

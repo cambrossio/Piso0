@@ -37,9 +37,18 @@ export default function ClientePago() {
           return;
         }
       } else if (metodoPago === 'caja') {
-        await api.post(`/pedidos/${pedido.id}/pago`, { tipoPago: 'caja' });
-        socket.emit('pago-registrado', { pedidoId: pedido.id });
-        addToast('Pago en caja registrado', 'success');
+        socket.emit('pedir-cuenta', { 
+          mesaId: pedido.mesaId,
+          numeroMesa: localStorage.getItem('mesaNumero') || 'Mesa',
+          pedidoId: pedido.id,
+          tipoPago: 'caja'
+        });
+        addToast('Mozo será notificado para cobrar', 'success');
+        
+        const updatedPedido = { ...pedido, tipoPago: 'caja', estado: 'entregado' };
+        localStorage.setItem('pedidoActual', JSON.stringify(updatedPedido));
+        navigate('/pedido');
+        return;
       }
       
       const updatedPedido = { ...pedido, tipoPago: metodoPago };
@@ -53,8 +62,8 @@ export default function ClientePago() {
   };
 
   const metodos = [
-    { id: 'mercadopago', label: 'MercadoPago', icon: '📱', desc: 'Pagar ahora con Checkout MP' },
-    { id: 'caja', label: 'Pagar en Caja', icon: '💵', desc: 'Paga cuando llegue el mozo' }
+    { id: 'mercadopago', label: 'MercadoPago', icon: '📱', desc: 'Pagar ahora online' },
+    { id: 'caja', label: 'Pagar en Caja', icon: '💵', desc: 'Mozo viene a cobrar' }
   ];
 
   return (

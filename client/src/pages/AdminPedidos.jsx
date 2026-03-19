@@ -18,6 +18,8 @@ export default function AdminPedidos() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [pedidoACancelar, setPedidoACancelar] = useState(null);
   const [cancelReason, setCancelReason] = useState('');
+  const [showStartModal, setShowStartModal] = useState(false);
+  const [pedidoAIniciar, setPedidoAIniciar] = useState(null);
 
   useEffect(() => {
     fetchPedidos();
@@ -88,6 +90,24 @@ export default function AdminPedidos() {
     } catch (err) {
       addToast(err.response?.data?.error || 'Error al cambiar estado', 'error');
     }
+  };
+
+  const iniciarPreparacion = (pedido) => {
+    setPedidoAIniciar(pedido);
+    setShowStartModal(true);
+  };
+
+  const confirmarInicioPreparacion = (imprimir) => {
+    if (!pedidoAIniciar) return;
+    
+    cambiarEstado(pedidoAIniciar.id, 'preparando');
+    
+    if (imprimir) {
+      setPedidoParaTicket(pedidoAIniciar);
+    }
+    
+    setShowStartModal(false);
+    setPedidoAIniciar(null);
   };
 
   const marcarCobrado = (pedido) => {
@@ -209,10 +229,10 @@ export default function AdminPedidos() {
               <span style={{ fontWeight: '600', color: 'var(--accent)' }}>${pedido.total}</span>
             </div>
 
-            {pedido.estado !== 'cancelado' && pedido.estado !== 'entregado' && pedido.estado !== 'pagado' && (
+              {pedido.estado !== 'cancelado' && pedido.estado !== 'entregado' && pedido.estado !== 'pagado' && (
               <div className="grid grid-2" style={{ gap: '8px' }}>
                 {pedido.estado === 'pendiente' && (
-                  <button onClick={() => cambiarEstado(pedido.id, 'preparando')} className="btn btn-primary" style={{ padding: '8px' }}>
+                  <button onClick={() => iniciarPreparacion(pedido)} className="btn btn-primary" style={{ padding: '8px' }}>
                     Start
                   </button>
                 )}
@@ -343,6 +363,39 @@ export default function AdminPedidos() {
 
             <button onClick={confirmarCancelacion} className="btn btn-danger" style={{ width: '100%', marginTop: '16px' }} disabled={!cancelReason.trim()}>
               Confirmar Cancelación
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showStartModal && pedidoAIniciar && (
+        <div className="modal-overlay" onClick={() => setShowStartModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>🍳 Iniciar Preparación</h2>
+              <button onClick={() => setShowStartModal(false)} className="modal-close">×</button>
+            </div>
+
+            <div className="card" style={{ marginBottom: '20px' }}>
+              <p><strong>Pedido:</strong> #{pedidoAIniciar.id.slice(0, 8)}</p>
+              <p><strong>Mesa:</strong> {pedidoAIniciar.numeroMesa}</p>
+            </div>
+
+            <p style={{ marginBottom: '16px' }}>¿Querés imprimir el ticket para la cocina?</p>
+
+            <button 
+              onClick={() => confirmarInicioPreparacion(true)} 
+              className="btn btn-primary" 
+              style={{ width: '100%', marginBottom: '10px' }}
+            >
+              🖨️ Sí, Imprimir Ticket
+            </button>
+            <button 
+              onClick={() => confirmarInicioPreparacion(false)} 
+              className="btn btn-secondary" 
+              style={{ width: '100%' }}
+            >
+              No, solo comenzar
             </button>
           </div>
         </div>
