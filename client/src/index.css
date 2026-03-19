@@ -332,3 +332,47 @@ th {
   font-size: 24px;
   cursor: pointer;
 }
+
+#qr-reader {
+  border: 2px solid var(--accent) !important;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+#qr-reader video {
+  border-radius: 10px;
+}
+
+#qr-reader__scan_region {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+#qr-reader__dashboard {
+  background: var(--primary) !important;
+}
+
+#qr-reader__dashboard section {
+  background: var(--secondary) !important;
+  color: var(--text) !important;
+}
+
+#qr-reader__dashboard span {
+  color: var(--text) !important;
+}
+
+#qr-reader__header_message {
+  background: var(--secondary) !important;
+  color: var(--text) !important;
+}
+
+#qr-reader__status_span {
+  color: var(--text-secondary) !important;
+}
+
+html5-qrcode {
+  max-width: 100%;
+}
+
+html5-qrcode img {
+  max-width: 100%;
+}

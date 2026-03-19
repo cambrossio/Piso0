@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Html5Qrcode } from 'html5-qrcode';
@@ -9,6 +9,7 @@ export default function QRScanner() {
   const [loading, setLoading] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [scannerInstance, setScannerInstance] = useState(null);
+  const scannerRef = useRef(null);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -20,10 +21,16 @@ export default function QRScanner() {
     };
   }, [scannerInstance]);
 
-  const startScanner = async () => {
-    setShowScanner(true);
-    setError('');
+  useEffect(() => {
+    if (showScanner && !scannerInstance) {
+      const timer = setTimeout(() => {
+        startScannerInternal();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [showScanner]);
 
+  const startScannerInternal = async () => {
     try {
       const scanner = new Html5Qrcode('qr-reader');
       setScannerInstance(scanner);
@@ -37,9 +44,7 @@ export default function QRScanner() {
         (decodedText) => {
           handleQRScanned(decodedText);
         },
-        (errorMessage) => {
-          // Ignore scan errors
-        }
+        (errorMessage) => {}
       );
     } catch (err) {
       console.error('Error starting scanner:', err);
@@ -63,7 +68,6 @@ export default function QRScanner() {
     
     let mesaCodigo = decodedText;
     
-    // Handle different QR formats
     if (decodedText.includes('/mesa/')) {
       mesaCodigo = decodedText.split('/mesa/')[1].split('?')[0];
     } else if (decodedText.startsWith('http')) {
@@ -90,13 +94,13 @@ export default function QRScanner() {
   return (
     <div className="container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
       <h1 style={{ marginBottom: '8px' }}>Piso0</h1>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>Escanea el QR de tu mesa</p>
+      <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>Escaneá el QR de tu mesa</p>
 
       <div className="card" style={{ width: '100%', maxWidth: '400px', textAlign: 'center' }}>
         
         {showScanner ? (
-          <div>
-            <div id="qr-reader" style={{ width: '100%' }}></div>
+          <div ref={scannerRef}>
+            <div id="qr-reader" style={{ width: '100%', minHeight: '300px' }}></div>
             <button 
               onClick={stopScanner} 
               className="btn btn-secondary" 
@@ -108,7 +112,10 @@ export default function QRScanner() {
         ) : (
           <>
             <button
-              onClick={startScanner}
+              onClick={() => {
+                setShowScanner(true);
+                setError('');
+              }}
               style={{
                 width: '200px',
                 height: '200px',
