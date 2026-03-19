@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Html5Qrcode } from 'html5-qrcode';
@@ -8,64 +8,51 @@ export default function QRScanner() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
-  const [scannerInstance, setScannerInstance] = useState(null);
   const scannerRef = useRef(null);
+  const html5QrCodeRef = useRef(null);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    return () => {
-      if (scannerInstance) {
-        scannerInstance.stop().catch(() => {});
+  const stopScanner = useCallback(async () => {
+    if (html5QrCodeRef.current) {
+      try {
+        await html5QrCodeRef.current.stop();
+      } catch (err) {
+        console.log('Scanner stop error:', err);
       }
-    };
-  }, [scannerInstance]);
-
-  useEffect(() => {
-    if (showScanner && !scannerInstance) {
-      const timer = setTimeout(() => {
-        startScannerInternal();
-      }, 100);
-      return () => clearTimeout(timer);
+      html5QrCodeRef.current = null;
     }
-  }, [showScanner]);
+    setShowScanner(false);
+  }, []);
 
-  const startScannerInternal = async () => {
+  const startScanner = useCallback(async () => {
+    if (html5QrCodeRef.current) return;
+    
     try {
-      const scanner = new Html5Qrcode('qr-reader');
-      setScannerInstance(scanner);
+      const html5QrCode = new Html5Qrcode('qr-reader');
+      html5QrCodeRef.current = html5QrCode;
 
-      await scanner.start(
+      await html5QrCode.start(
         { facingMode: 'environment' },
         {
           fps: 10,
-          qrbox: { width: 250, height: 250 }
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0
         },
         (decodedText) => {
+          stopScanner();
           handleQRScanned(decodedText);
         },
-        (errorMessage) => {}
+        () => {}
       );
     } catch (err) {
-      console.error('Error starting scanner:', err);
+      console.error('Error scanner:', err);
       setError('No se pudo acceder a la cámara');
-      setShowScanner(false);
+      stopScanner();
     }
-  };
-
-  const stopScanner = async () => {
-    if (scannerInstance) {
-      try {
-        await scannerInstance.stop();
-      } catch (err) {}
-      setScannerInstance(null);
-    }
-    setShowScanner(false);
-  };
+  }, [stopScanner]);
 
   const handleQRScanned = (decodedText) => {
-    stopScanner();
-    
     let mesaCodigo = decodedText;
     
     if (decodedText.includes('/mesa/')) {
@@ -82,7 +69,7 @@ export default function QRScanner() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!codigoManual.trim()) {
       setError('Ingresá el código de la mesa');
@@ -90,6 +77,26 @@ export default function QRScanner() {
     }
     navigate(`/mesa/${codigoManual.trim()}`);
   };
+
+  const openScanner = () => {
+    setShowScanner(true);
+    setError('');
+  };
+
+  useEffect(() => {
+    return () => {
+      stopScanner();
+    };
+  }, [stopScanner]);
+
+  useEffect(() => {
+    if (showScanner) {
+      const timer = setTimeout(() => {
+        startScanner();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [showScanner, startScanner]);
 
   return (
     <div className="container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -100,7 +107,7 @@ export default function QRScanner() {
         
         {showScanner ? (
           <div ref={scannerRef}>
-            <div id="qr-reader" style={{ width: '100%', minHeight: '300px' }}></div>
+            <div id="qr-reader"></div>
             <button 
               onClick={stopScanner} 
               className="btn btn-secondary" 
@@ -112,17 +119,14 @@ export default function QRScanner() {
         ) : (
           <>
             <button
-              onClick={() => {
-                setShowScanner(true);
-                setError('');
-              }}
+              onClick={openScanner}
               style={{
                 width: '200px',
                 height: '200px',
                 margin: '0 auto 20px',
                 background: 'var(--primary)',
                 borderRadius: '16px',
-                border: 'none',
+                border: '2px solid var(--gold)',
                 cursor: 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
@@ -132,7 +136,7 @@ export default function QRScanner() {
               }}
             >
               <span style={{ fontSize: '64px' }}>📷</span>
-              <span style={{ color: 'white', fontSize: '14px' }}>Tocá para escanear</span>
+              <span style={{ color: 'var(--gold)', fontSize: '14px', fontWeight: '600' }}>Tocá para escanear</span>
             </button>
 
             <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
