@@ -483,7 +483,7 @@ export default function AdminContabilidad() {
             </div>
 
             <p style={{ marginBottom: '20px' }}>
-              ¿Está seguro de cerrar el día? Esto registrará el balance del día como un gasto en el sistema.
+              ¿Está seguro de cerrar el día? Se registrará el balance total del día.
             </p>
 
             <div className="card" style={{ marginBottom: '20px', textAlign: 'center' }}>
@@ -523,7 +523,9 @@ export default function AdminContabilidad() {
                 {historial.map(h => (
                   <tr key={h.id}>
                     <td>{new Date(h.createdAt).toLocaleDateString()}</td>
-                    <td style={{ color: 'var(--error)' }}>-${h.monto}</td>
+                    <td style={{ color: h.tipo === 'ingreso' ? 'var(--success)' : 'var(--error)' }}>
+                      {h.tipo === 'ingreso' ? '+' : '-'}${h.monto}
+                    </td>
                     <td>{h.descripcion}</td>
                   </tr>
                 ))}

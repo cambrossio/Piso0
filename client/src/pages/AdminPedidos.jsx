@@ -4,6 +4,7 @@ import api from '../services/api';
 import { socket, joinAdmin } from '../services/socket';
 import NotificacionesMozo from '../components/NotificacionesMozo';
 import TicketPrint from '../components/TicketPrint';
+import KitchenTicket from '../components/KitchenTicket';
 import { useToast } from '../components/Toast';
 
 export default function AdminPedidos() {
@@ -12,6 +13,7 @@ export default function AdminPedidos() {
   const [loading, setLoading] = useState(true);
   const [filtroEstado, setFiltroEstado] = useState('todos');
   const [pedidoParaTicket, setPedidoParaTicket] = useState(null);
+  const [kitchenTicketPedido, setKitchenTicketPedido] = useState(null);
   const [showCobrarModal, setShowCobrarModal] = useState(false);
   const [pedidoACobrar, setPedidoACobrar] = useState(null);
   const [tipoPagoCobrar, setTipoPagoCobrar] = useState('efectivo');
@@ -97,13 +99,13 @@ export default function AdminPedidos() {
     setShowStartModal(true);
   };
 
-  const confirmarInicioPreparacion = (imprimir) => {
+  const confirmarInicioPreparacion = (imprimirTicket) => {
     if (!pedidoAIniciar) return;
     
     cambiarEstado(pedidoAIniciar.id, 'preparando');
     
-    if (imprimir) {
-      setPedidoParaTicket(pedidoAIniciar);
+    if (imprimirTicket) {
+      setKitchenTicketPedido(pedidoAIniciar);
     }
     
     setShowStartModal(false);
@@ -399,6 +401,13 @@ export default function AdminPedidos() {
             </button>
           </div>
         </div>
+      )}
+
+      {kitchenTicketPedido && (
+        <KitchenTicket 
+          pedido={kitchenTicketPedido} 
+          onClose={() => setKitchenTicketPedido(null)} 
+        />
       )}
     </div>
   );
