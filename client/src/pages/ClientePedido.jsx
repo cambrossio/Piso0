@@ -147,7 +147,7 @@ export default function ClientePedido() {
                 localStorage.setItem('pedidoActual', JSON.stringify(p));
               }}
               className={`btn ${pedido.id === p.id ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ whiteSpace: 'nowrap', fontSize: '12px', padding: '8px 12px' }
+              style={{ whiteSpace: 'nowrap', fontSize: '12px', padding: '8px 12px' }}
             >
               #{p.id.slice(0, 6)}
             </button>
