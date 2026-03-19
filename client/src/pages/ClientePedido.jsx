@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import { socket, joinMesa } from '../services/socket';
+import { socket, joinMesa, pedirCuenta } from '../services/socket';
 import { useToast } from '../components/Toast';
 
 export default function ClientePedido() {
@@ -96,13 +96,17 @@ export default function ClientePedido() {
   };
 
   const pedirLaCuenta = () => {
-    if (!pedidoSeleccionado) return;
+    if (!pedidoSeleccionado) {
+      addToast('No hay un pedido seleccionado', 'error');
+      return;
+    }
     const numeroMesa = localStorage.getItem('mesaNumero') || 'Mesa';
-    socket.emit('pedir-cuenta', { 
+    console.log('Pedir cuenta:', {
       mesaId: pedidoSeleccionado.mesaId,
       numeroMesa: numeroMesa,
       pedidoId: pedidoSeleccionado.id
     });
+    pedirCuenta(pedidoSeleccionado.mesaId, numeroMesa, pedidoSeleccionado.id);
     addToast('La cuenta ha sido solicitada', 'info');
   };
 
