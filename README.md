@@ -145,3 +145,4 @@
 - [ ] Los ingresos se registran automáticamente
 - [ ] La aplicación es responsive
 
+
