@@ -134,11 +134,11 @@ export default function ClientePedido() {
   const estadoActual = estadoOrden.indexOf(pedido.estado);
 
   return (
-    <div className="container" style={{ minHeight: '100vh' }}>
-      <h2 style={{ marginBottom: '24px' }}>Mis Pedidos</h2>
+    <div className="container">
+      <h2 style={{ marginBottom: '16px' }}>Mis Pedidos</h2>
 
       {pedidos.length > 1 && (
-        <div className="flex gap-10" style={{ marginBottom: '20px', flexWrap: 'wrap' }}>
+        <div style={{ marginBottom: '16px', display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
           {pedidos.map(p => (
             <button
               key={p.id}
@@ -147,40 +147,41 @@ export default function ClientePedido() {
                 localStorage.setItem('pedidoActual', JSON.stringify(p));
               }}
               className={`btn ${pedido.id === p.id ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ whiteSpace: 'nowrap', fontSize: '12px', padding: '8px 12px' }
             >
-              #{p.id.slice(0, 8)} - {p.estado}
+              #{p.id.slice(0, 6)}
             </button>
           ))}
         </div>
       )}
 
-      <div className="card" style={{ marginBottom: '24px' }}>
-        <div className="flex flex-between" style={{ marginBottom: '20px' }}>
-          <span style={{ color: 'var(--text-secondary)' }}>Estado:</span>
-          <span className={`badge badge-${pedido.estado}`} style={{ textTransform: 'capitalize' }}>
+      <div className="card" style={{ marginBottom: '16px' }}>
+        <div className="flex flex-between" style={{ marginBottom: '16px' }}>
+          <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Estado:</span>
+          <span className={`badge badge-${pedido.estado}`}>
             {pedido.estado}
           </span>
         </div>
 
-        <div style={{ marginBottom: '24px' }}>
+        <div style={{ marginBottom: '16px' }}>
           {estadoOrden.map((estado, index) => (
-            <div key={estado} style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+            <div key={estado} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
               <div style={{
-                width: '32px',
-                height: '32px',
+                width: '28px',
+                height: '28px',
                 borderRadius: '50%',
                 background: index <= estadoActual ? 'var(--gold)' : 'var(--border)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginRight: '12px',
+                marginRight: '10px',
                 color: index <= estadoActual ? '#000' : 'var(--text-secondary)',
                 fontWeight: 'bold',
-                fontSize: '14px'
+                fontSize: '12px'
               }}>
                 {index < estadoActual ? '✓' : index + 1}
               </div>
-              <span style={{ textTransform: 'capitalize', color: index <= estadoActual ? 'var(--text)' : 'var(--text-secondary)', fontWeight: index <= estadoActual ? '600' : '400' }}>
+              <span style={{ textTransform: 'capitalize', fontSize: '13px', color: index <= estadoActual ? 'var(--text)' : 'var(--text-secondary)' }}>
                 {estado}
               </span>
             </div>
@@ -194,54 +195,42 @@ export default function ClientePedido() {
           </div>
         )}
 
-        <h4 style={{ marginBottom: '16px' }}>Items:</h4>
+        <h4 style={{ marginBottom: '12px', fontSize: '14px' }}>Items:</h4>
         {pedido.items.map((item, index) => (
-          <div key={index} className="flex flex-between" style={{ padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+          <div key={index} className="flex flex-between" style={{ padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: '13px' }}>
             <span>{item.cantidad}x {item.productoNombre}</span>
             <span>${item.precioUnitario * item.cantidad}</span>
           </div>
         ))}
 
-        <div className="flex flex-between" style={{ marginTop: '16px', paddingTop: '16px', borderTop: '2px solid var(--accent)' }}>
-          <span style={{ fontSize: '18px', fontWeight: '600' }}>Total:</span>
-          <span style={{ fontSize: '18px', fontWeight: '600', color: 'var(--accent)' }}>${pedido.total}</span>
+        <div className="flex flex-between" style={{ marginTop: '12px', paddingTop: '12px', borderTop: '2px solid var(--accent)' }}>
+          <span style={{ fontSize: '16px', fontWeight: '600' }}>Total:</span>
+          <span style={{ fontSize: '16px', fontWeight: '600', color: 'var(--accent)' }}>${pedido.total}</span>
         </div>
 
         {!pedido.tipoPago && (
-          <div style={{ marginTop: '16px', padding: '12px', background: 'var(--warning)', borderRadius: '8px', textAlign: 'center' }}>
-            <p style={{ color: '#000', fontWeight: '600' }}>⏳ Pago Pendiente</p>
+          <div style={{ marginTop: '12px', padding: '10px', background: 'var(--warning)', borderRadius: '6px', textAlign: 'center' }}>
+            <p style={{ color: '#000', fontWeight: '600', fontSize: '13px' }}>⏳ Pago Pendiente</p>
           </div>
         )}
       </div>
 
       {pedido.estado !== 'cancelado' && (
-        <>
-          <button 
-            onClick={solicitarMozo} 
-            className="btn btn-secondary" 
-            style={{ width: '100%', marginBottom: '12px' }}
-          >
-            📞 Solicitar Mozo
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <button onClick={solicitarMozo} className="btn btn-secondary">
+            📞 Mozo
           </button>
 
-          <button 
-            onClick={pedirLaCuenta} 
-            className="btn btn-warning" 
-            style={{ width: '100%', marginBottom: '12px', color: '#000' }}
-          >
-            🧾 Pedir la Cuenta
+          <button onClick={pedirLaCuenta} className="btn btn-warning" style={{ color: '#000' }}>
+            🧾 Pedir Cuenta
           </button>
 
           {!pedido.tipoPago && (
-            <button 
-              onClick={() => navigate('/pago')} 
-              className="btn btn-primary" 
-              style={{ width: '100%' }}
-            >
+            <button onClick={() => navigate('/pago')} className="btn btn-primary">
               💳 Pagar
             </button>
           )}
-        </>
+        </div>
       )}
 
       {pedido.tipoPago && (

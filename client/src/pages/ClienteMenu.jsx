@@ -34,10 +34,7 @@ export default function ClienteMenu() {
         localStorage.setItem('mesaCodigoQR', codigoQR);
         localStorage.setItem('mesaNumero', mesaRes.data.numero);
         
-        const pedidosTodos = pedidosRes.data.filter(p => 
-          p.estado !== 'cancelado'
-        );
-        
+        const pedidosTodos = pedidosRes.data.filter(p => p.estado !== 'cancelado');
         const misPedidos = pedidosTodos.filter(p => p.clienteId === usuario.id);
         
         if (mesaRes.data.estado === 'ocupada' && misPedidos.length === 0) {
@@ -148,9 +145,6 @@ export default function ClienteMenu() {
       addToast('Productos agregados al pedido', 'success');
       setCarrito([]);
       setMostrarSelector(false);
-      const [mesaRes] = await Promise.all([
-        api.get(`/mesas/qr/${codigoQR}`)
-      ]);
       const pedidosRes = await api.get(`/pedidos/mesa/${codigoQR}`);
       const pedidos = pedidosRes.data.filter(p => 
         !['entregado', 'cancelado'].includes(p.estado)
@@ -178,10 +172,10 @@ export default function ClienteMenu() {
   }
 
   return (
-    <div className="container" style={{ paddingBottom: '100px' }}>
-      <div className="flex flex-between" style={{ marginBottom: '20px' }}>
-        <h2>Mesa {mesa.numero}</h2>
-        <div className="flex gap-10">
+    <div className="container" style={{ paddingBottom: '140px' }}>
+      <div className="flex flex-between" style={{ marginBottom: '16px' }}>
+        <h2>🍽️ Mesa {mesa.numero}</h2>
+        <div style={{ display: 'flex', gap: '8px' }}>
           <button 
             onClick={() => {
               socket.emit('solicitar-mozo', { 
@@ -191,22 +185,17 @@ export default function ClienteMenu() {
               addToast('Mozo solicitado', 'warning');
             }} 
             className="btn btn-secondary"
+            style={{ padding: '8px 12px', fontSize: '12px' }}
           >
             📞 Mozo
           </button>
-          <button onClick={() => navigate('/scan')} className="btn btn-secondary">Cambiar Mesa</button>
-          <button onClick={() => {
-            localStorage.removeItem('mesaCodigoQR');
-            localStorage.removeItem('mesaNumero');
-            logout();
-            navigate('/login');
-          }} className="btn btn-danger">Cerrar Sesión</button>
+          <button onClick={() => navigate('/scan')} className="btn btn-secondary" style={{ padding: '8px 12px', fontSize: '12px' }}>Cambiar</button>
         </div>
       </div>
 
       {pedidosActivos.length > 0 && (
-        <div className="card" style={{ marginBottom: '20px' }}>
-          <h3 style={{ marginBottom: '12px' }}>Mis Pedidos</h3>
+        <div className="card" style={{ marginBottom: '16px', padding: '12px' }}>
+          <h4 style={{ marginBottom: '8px', color: 'var(--gold)' }}>Mis Pedidos</h4>
           {pedidosActivos.map(pedido => (
             <div key={pedido.id} 
               onClick={() => {
@@ -214,108 +203,73 @@ export default function ClienteMenu() {
                 navigate('/pedido');
               }}
               style={{ 
-                padding: '12px', 
-                marginBottom: '8px', 
+                padding: '8px', 
+                marginBottom: '6px', 
                 background: 'var(--secondary)', 
-                borderRadius: '8px',
+                borderRadius: '6px',
                 cursor: 'pointer'
               }}
             >
               <div className="flex flex-between">
-                <span>Pedido #{pedido.id.slice(0, 8)}</span>
+                <span style={{ fontSize: '13px' }}>#{pedido.id.slice(0, 6)}</span>
                 <span className={`badge badge-${pedido.estado}`}>{pedido.estado}</span>
               </div>
-              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                {pedido.items.length} productos - ${pedido.total}
-              </p>
             </div>
           ))}
         </div>
       )}
 
-      <div className="flex gap-10" style={{ marginBottom: '20px', overflowX: 'auto', paddingBottom: '10px' }}>
+      <div className="flex gap-10" style={{ marginBottom: '16px', overflowX: 'auto', paddingBottom: '8px' }}>
         {categorias.map(cat => (
           <button
             key={cat}
             onClick={() => setCategoriaSeleccionada(cat)}
             className={`btn ${categoriaSeleccionada === cat ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ whiteSpace: 'nowrap', textTransform: 'capitalize' }}
+            style={{ whiteSpace: 'nowrap', textTransform: 'capitalize', padding: '8px 14px', fontSize: '13px' }}
           >
             {cat}
           </button>
         ))}
       </div>
 
-      <div className="grid grid-2">
-        <div>
-          <h3 style={{ marginBottom: '16px', textTransform: 'capitalize' }}>{categoriaSeleccionada}s</h3>
-          <div className="grid grid-2" style={{ gap: '12px' }}>
-            {productosFiltrados.map(producto => (
-              <div key={producto.id} className="card" style={{ padding: '16px' }}>
-                <h4>{producto.nombre}</h4>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: '8px 0' }}>
-                  {producto.descripcion}
-                </p>
-                <div className="flex flex-between" style={{ alignItems: 'center' }}>
-                  <span style={{ fontSize: '18px', fontWeight: '600', color: 'var(--accent)' }}>
-                    ${producto.precio}
-                  </span>
-                  <button 
-                    onClick={() => agregarAlCarrito(producto)}
-                    className="btn btn-primary"
-                    style={{ padding: '8px 16px' }}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            ))}
+      <h3 style={{ marginBottom: '12px', textTransform: 'capitalize' }}>{categoriaSeleccionada}s</h3>
+      
+      <div className="grid grid-2" style={{ gap: '10px', marginBottom: '16px' }}>
+        {productosFiltrados.map(producto => (
+          <div key={producto.id} className="card" style={{ padding: '12px' }}>
+            <h4 style={{ marginBottom: '4px', fontSize: '14px' }}>{producto.nombre}</h4>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '12px', marginBottom: '8px' }}>
+              {producto.descripcion}
+            </p>
+            <div className="flex flex-between" style={{ alignItems: 'center' }}>
+              <span style={{ fontSize: '16px', fontWeight: '600', color: 'var(--accent)' }}>
+                ${producto.precio}
+              </span>
+              <button 
+                onClick={() => agregarAlCarrito(producto)}
+                className="btn btn-primary"
+                style={{ padding: '8px 16px' }}
+              >
+                +
+              </button>
+            </div>
           </div>
-        </div>
-
-        <div>
-          <div className="card" style={{ position: 'sticky', top: '20px' }}>
-            <h3 style={{ marginBottom: '16px' }}>Tu Pedido</h3>
-            
-            {carrito.length === 0 ? (
-              <p style={{ color: 'var(--text-secondary)' }}>Agrega productos a tu pedido</p>
-            ) : (
-              <>
-                {carrito.map(item => (
-                  <div key={item.productoId} className="flex flex-between" style={{ padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
-                    <div>
-                      <p>{item.productoNombre}</p>
-                      <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-                        ${item.precioUnitario} x {item.cantidad}
-                      </p>
-                    </div>
-                    <div className="flex gap-10">
-                      <button onClick={() => removerDelCarrito(item.productoId)} className="btn btn-secondary" style={{ padding: '4px 12px' }}>-</button>
-                      <span style={{ padding: '4px 12px' }}>{item.cantidad}</span>
-                      <button onClick={() => agregarAlCarrito({ id: item.productoId, nombre: item.productoNombre, precio: item.precioUnitario })} className="btn btn-secondary" style={{ padding: '4px 12px' }}>+</button>
-                    </div>
-                  </div>
-                ))}
-
-                <div style={{ padding: '16px 0', borderTop: '2px solid var(--accent)', marginTop: '12px' }}>
-                  <div className="flex flex-between">
-                    <span style={{ fontSize: '18px', fontWeight: '600' }}>Total:</span>
-                    <span style={{ fontSize: '18px', fontWeight: '600', color: 'var(--accent)' }}>${totalCarrito}</span>
-                  </div>
-                </div>
-
-                <button 
-                  onClick={confirmarPedido}
-                  className="btn btn-primary" 
-                  style={{ width: '100%', marginTop: '16px' }}
-                >
-                  {tienePedidoPendiente ? 'Agregar a Mi Pedido' : 'Enviar Pedido'}
-                </button>
-              </>
-            )}
-          </div>
-        </div>
+        ))}
       </div>
+
+      {carrito.length > 0 && (
+        <div className="fixed-cart">
+          <div className="card" style={{ padding: '12px', position: 'fixed', bottom: '10px', left: '10px', right: '10px', zIndex: 100 }}>
+            <div className="flex flex-between" style={{ marginBottom: '10px' }}>
+              <span>Items: {carrito.reduce((sum, i) => sum + i.cantidad, 0)}</span>
+              <strong style={{ color: 'var(--gold)', fontSize: '18px' }}>${totalCarrito}</strong>
+            </div>
+            <button onClick={confirmarPedido} className="btn btn-primary" style={{ width: '100%' }}>
+              {tienePedidoPendiente ? 'Agregar a Mi Pedido' : 'Enviar Pedido'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {mostrarSelector && (
         <div className="modal-overlay" onClick={() => setMostrarSelector(false)}>
@@ -325,24 +279,19 @@ export default function ClienteMenu() {
               <button onClick={() => setMostrarSelector(false)} className="modal-close">×</button>
             </div>
 
-            <p style={{ marginBottom: '16px' }}>¿Qué deseas hacer con estos productos?</p>
-
             {pedidosActivos.filter(p => p.estado === 'pendiente').map(pedido => (
               <button
                 key={pedido.id}
                 onClick={() => agregarAPedido(pedido.id)}
                 className="btn btn-primary"
-                style={{ width: '100%', marginBottom: '12px' }}
+                style={{ width: '100%', marginBottom: '10px' }}
               >
-                Agregar a Pedido #{pedido.id.slice(0, 8)} (pendiente)
+                Agregar a #{pedido.id.slice(0, 6)}
               </button>
             ))}
 
             <button
-              onClick={() => {
-                crearNuevoPedido();
-                setMostrarSelector(false);
-              }}
+              onClick={() => { crearNuevoPedido(); setMostrarSelector(false); }}
               className="btn btn-secondary"
               style={{ width: '100%' }}
             >

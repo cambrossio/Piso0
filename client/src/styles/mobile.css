@@ -1,0 +1,318 @@
+/* Mobile Responsive - Ultra Compact */
+@media (max-width: 768px) {
+  :root {
+    --container-padding: 12px;
+    --card-padding: 12px;
+    --btn-padding: 12px 16px;
+  }
+  
+  .container {
+    padding: var(--container-padding);
+    max-width: 100%;
+  }
+  
+  /* Cards */
+  .card {
+    padding: var(--card-padding);
+    margin-bottom: 10px;
+    border-radius: 10px;
+  }
+  
+  /* Headings */
+  h1 { font-size: 22px !important; }
+  h2 { font-size: 18px !important; margin-bottom: 12px !important; }
+  h3 { font-size: 16px !important; }
+  h4 { font-size: 14px !important; }
+  
+  /* Buttons - Smaller and more compact */
+  .btn {
+    padding: 10px 14px !important;
+    font-size: 14px !important;
+    border-radius: 6px !important;
+    min-height: 40px;
+    width: 100%;
+  }
+  
+  button {
+    min-height: 40px !important;
+  }
+  
+  /* Grid layouts - Single column */
+  .grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .grid-2 {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .grid-3 {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .grid > div,
+  .grid-2 > div,
+  .grid-3 > div {
+    width: 100%;
+  }
+  
+  /* Flex layouts */
+  .flex {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .flex-between {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .flex gap-10 { gap: 8px; }
+  .flex gap-20 { gap: 12px; }
+  
+  .items-center { align-items: center; }
+  
+  /* Form inputs - Compact */
+  .form-group {
+    margin-bottom: 12px;
+  }
+  
+  .form-group label {
+    font-size: 13px;
+    margin-bottom: 4px;
+    display: block;
+  }
+  
+  input, select, textarea {
+    padding: 10px 12px !important;
+    font-size: 16px !important;
+    border-radius: 6px;
+    width: 100%;
+  }
+  
+  textarea {
+    min-height: 60px;
+  }
+  
+  /* Badges */
+  .badge {
+    font-size: 11px !important;
+    padding: 3px 8px !important;
+    border-radius: 4px;
+  }
+  
+  /* Tables */
+  table {
+    font-size: 12px;
+    width: 100%;
+  }
+  
+  th, td {
+    padding: 8px 6px !important;
+  }
+  
+  /* Modals */
+  .modal {
+    width: 95% !important;
+    max-width: none !important;
+    margin: 10px auto !important;
+    padding: 16px !important;
+    border-radius: 12px;
+  }
+  
+  .modal-overlay {
+    padding: 5px;
+    align-items: flex-end !important;
+  }
+  
+  .modal-header {
+    margin-bottom: 12px;
+  }
+  
+  .modal-close {
+    font-size: 24px;
+    padding: 4px 8px;
+  }
+  
+  /* Navigation */
+  .nav-links {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  /* Product cards */
+  .product-card {
+    padding: 10px;
+  }
+  
+  .product-card h4 {
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  
+  /* QR Scanner */
+  #qr-reader {
+    width: 100% !important;
+    min-height: 250px;
+  }
+  
+  /* Bottom bar (fixed) */
+  [style*="position: fixed"][style*="bottom"] {
+    padding: 10px 12px !important;
+  }
+  
+  /* Hide scrollbar but allow scroll */
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 2px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 380px) {
+  .container {
+    padding: 8px;
+  }
+  
+  .card {
+    padding: 10px;
+  }
+  
+  h1 { font-size: 20px !important; }
+  h2 { font-size: 16px !important; }
+  
+  .btn {
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* Touch optimizations */
+@media (pointer: coarse) {
+  .btn, button {
+    min-height: 44px;
+  }
+  
+  a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+/* Prevent iOS zoom on inputs */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+  
+  select {
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23fff'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px !important;
+  }
+}
+
+/* Fixed cart at bottom for mobile */
+.fixed-cart {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.fixed-cart .card {
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+  border-top: 2px solid var(--gold);
+}
+
+/* Compact lists */
+.list-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Status indicators */
+.status-pendiente { color: var(--warning); }
+.status-preparando { color: #2196F3; }
+.status-listo { color: var(--success); }
+.status-entregado { color: var(--text-secondary); }
+.status-cancelado { color: var(--error); }
+.status-pagado { color: var(--gold); }
+
+/* Mobile menu adjustments */
+.nav-header {
+  padding: 10px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--background);
+}
+
+/* Order steps */
+.order-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.order-step.active {
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.order-step.completed {
+  color: var(--success);
+}
+
+.order-step-line {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+}
+
+/* Image handling */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Better touch targets */
+.checkbox-custom,
+.radio-custom {
+  width: 24px;
+  height: 24px;
+}
+
+/* Progress bars */
+.progress-bar {
+  height: 8px;
+  background: var(--secondary);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--gold);
+  transition: width 0.3s ease;
+}
