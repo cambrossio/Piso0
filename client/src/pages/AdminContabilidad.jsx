@@ -4,6 +4,7 @@ import api from '../services/api';
 import NotificacionesMozo from '../components/NotificacionesMozo';
 import TicketPrint from '../components/TicketPrint';
 import { useToast } from '../components/Toast';
+import { socket, joinAdmin } from '../services/socket';
 
 export default function AdminContabilidad() {
   const { addToast } = useToast();
@@ -38,6 +39,29 @@ export default function AdminContabilidad() {
   const [filtroCategoria, setFiltroCategoria] = useState('');
 
   const categoriasGasto = ['Insumos', 'Servicios', 'Salarios', 'Alquiler', 'Mantenimiento', 'Otros'];
+
+  useEffect(() => {
+    fetchData();
+    joinAdmin();
+
+    socket.on('pedido-actualizado', () => {
+      fetchData();
+    });
+
+    socket.on('pago-registrado', () => {
+      fetchData();
+    });
+
+    socket.on('transaccion-creada', () => {
+      fetchData();
+    });
+
+    return () => {
+      socket.off('pedido-actualizado');
+      socket.off('pago-registrado');
+      socket.off('transaccion-creada');
+    };
+  }, []);
 
   useEffect(() => {
     fetchData();

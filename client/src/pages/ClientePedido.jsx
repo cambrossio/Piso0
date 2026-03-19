@@ -99,8 +99,9 @@ export default function ClientePedido() {
     if (!pedidoSeleccionado) return;
     const numeroMesa = localStorage.getItem('mesaNumero') || 'Mesa';
     socket.emit('pedir-cuenta', { 
-      mesaId: pedidoSeleSeleccionado.mesaId,
-      numeroMesa: numeroMesa
+      mesaId: pedidoSeleccionado.mesaId,
+      numeroMesa: numeroMesa,
+      pedidoId: pedidoSeleccionado.id
     });
     addToast('La cuenta ha sido solicitada', 'info');
   };

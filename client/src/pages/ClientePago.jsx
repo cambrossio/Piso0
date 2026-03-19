@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useToast } from '../components/Toast';
+import { socket } from '../services/socket';
 
 export default function ClientePago() {
   const { addToast } = useToast();
@@ -37,6 +38,7 @@ export default function ClientePago() {
         }
       } else if (metodoPago === 'caja') {
         await api.post(`/pedidos/${pedido.id}/pago`, { tipoPago: 'caja' });
+        socket.emit('pago-registrado', { pedidoId: pedido.id });
         addToast('Pago en caja registrado', 'success');
       }
       
