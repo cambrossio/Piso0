@@ -7,38 +7,26 @@ const getSocketUrl = () => {
   return 'http://localhost:8000';
 };
 
-let socket = null;
+const SOCKET_URL = getSocketUrl();
+console.log('Socket URL:', SOCKET_URL);
 
-const createSocket = () => {
-  const SOCKET_URL = getSocketUrl();
-  console.log('Creating socket connection to:', SOCKET_URL);
-  socket = io(SOCKET_URL, {
-    transports: ['websocket', 'polling'],
-    reconnection: true,
-    reconnectionDelay: 1000,
-    reconnectionAttempts: 10,
-    reconnectionDelayMax: 5000
-  });
+const socketInstance = io(SOCKET_URL, {
+  transports: ['websocket', 'polling'],
+  reconnection: true,
+  reconnectionDelay: 1000,
+  reconnectionAttempts: 10,
+  reconnectionDelayMax: 5000
+});
 
-  socket.on('connect', () => {
-    console.log('Socket connected successfully:', socket.id);
-  });
+socketInstance.on('connect', () => {
+  console.log('Socket connected:', socketInstance.id);
+});
 
-  socket.on('connect_error', (error) => {
-    console.error('Socket connection error:', error.message);
-  });
+socketInstance.on('connect_error', (error) => {
+  console.error('Socket connection error:', error.message);
+});
 
-  return socket;
-};
-
-export const getSocket = () => {
-  if (!socket) {
-    socket = createSocket();
-  }
-  return socket;
-};
-
-export const socket = getSocket();
+export const socket = socketInstance;
 
 export const joinAdmin = () => {
   socket.emit('join-admin');
