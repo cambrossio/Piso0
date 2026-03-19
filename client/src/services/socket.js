@@ -3,11 +3,8 @@ import { io } from 'socket.io-client';
 let socket = null;
 
 const getSocketUrl = () => {
-  if (typeof import !== 'undefined' && import.meta?.env?.VITE_API_URL) {
+  if (import.meta?.env?.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
-  }
-  if (typeof window !== 'undefined' && window.__ENV__?.VITE_API_URL) {
-    return window.__ENV__.VITE_API_URL;
   }
   return 'http://localhost:8000';
 };
