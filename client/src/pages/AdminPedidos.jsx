@@ -160,7 +160,7 @@ export default function AdminPedidos() {
     ? pedidos 
     : pedidos.filter(p => p.estado === filtroEstado);
 
-  const estados = ['pendiente', 'preparando', 'listo', 'entregado', 'pagado', 'cancelado'];
+  const estados = ['pendiente', 'preparando', 'listo', 'enviando', 'entregado', 'pagado', 'cancelado'];
 
   if (loading) {
     return <div className="container">Cargando...</div>;
@@ -243,9 +243,19 @@ export default function AdminPedidos() {
                     Listo
                   </button>
                 )}
-                {pedido.estado === 'listo' && (
+                {pedido.estado === 'listo' && pedido.esDelivery && (
+                  <button onClick={() => cambiarEstado(pedido.id, 'enviando')} className="btn btn-warning" style={{ padding: '8px', color: '#000' }}>
+                    🚗 Enviar
+                  </button>
+                )}
+                {pedido.estado === 'listo' && !pedido.esDelivery && (
                   <button onClick={() => cambiarEstado(pedido.id, 'entregado')} className="btn btn-primary" style={{ padding: '8px' }}>
                     Entregar
+                  </button>
+                )}
+                {pedido.estado === 'enviando' && (
+                  <button onClick={() => cambiarEstado(pedido.id, 'entregado')} className="btn btn-primary" style={{ padding: '8px' }}>
+                    ✓ Confirmar Entrega
                   </button>
                 )}
                 {pedido.estado === 'entregado' && !pedido.tipoPago && (
@@ -259,6 +269,12 @@ export default function AdminPedidos() {
                   </button>
                 )}
               </div>
+            )}
+
+            {pedido.estado === 'enviando' && (
+              <p style={{ marginTop: '12px', color: 'var(--warning)', fontSize: '14px', fontWeight: '600' }}>
+                🚗 En camino a {pedido.deliveryInfo?.direccion}
+              </p>
             )}
 
             {pedido.estado === 'entregado' && (

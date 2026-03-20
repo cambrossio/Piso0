@@ -199,6 +199,13 @@ const syncDatabase = async () => {
       }
     }
     
+    try {
+      await sequelize.query("ALTER TYPE enum_Pedidos_estado ADD VALUE IF NOT EXISTS 'enviando'");
+      console.log('Added enviando to Pedidos estado enum');
+    } catch (e) {
+      console.log('Enum enviando may already exist:', e.message);
+    }
+    
     const Usuario = require('./models/Usuario');
     const adminExists = await Usuario.findOne({ where: { email: 'admin@piso0.com' } });
     

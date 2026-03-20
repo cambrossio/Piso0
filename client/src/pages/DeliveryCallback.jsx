@@ -41,7 +41,7 @@ export default function DeliveryCallback() {
       const { carrito, deliveryInfo, total } = JSON.parse(pagoData);
 
       try {
-        await api.post('/pedidos/delivery', {
+        const res = await api.post('/pedidos/delivery', {
           items: carrito,
           deliveryInfo,
           tipoPago: 'mercadopago',
@@ -50,12 +50,13 @@ export default function DeliveryCallback() {
           estado: 'preparando'
         });
 
+        localStorage.setItem('deliveryPedidoId', res.data.id);
+        localStorage.setItem('deliveryInfo', JSON.stringify(deliveryInfo));
         localStorage.removeItem('pagoPendienteDelivery');
         localStorage.removeItem('carritoDelivery');
-        localStorage.removeItem('deliveryInfo');
         localStorage.removeItem('modoPedido');
 
-        navigate('/delivery-exitoso');
+        navigate('/delivery-seguimiento');
       } catch (err) {
         console.error('Error al confirmar delivery:', err);
         setError(err.response?.data?.error || 'Error al confirmar el pedido');

@@ -22,6 +22,7 @@ import DeliveryPago from './pages/DeliveryPago';
 import DeliveryConfirmar from './pages/DeliveryConfirmar';
 import DeliveryExitoso from './pages/DeliveryExitoso';
 import DeliveryCallback from './pages/DeliveryCallback';
+import DeliverySeguimiento from './pages/DeliverySeguimiento';
 
 function ProtectedRoute({ children, adminOnly = false }) {
   const { usuario, loading } = useAuth();
@@ -124,6 +125,11 @@ function App() {
             } />
             <Route path="/delivery-exitoso" element={<DeliveryExitoso />} />
             <Route path="/delivery-callback" element={<DeliveryCallback />} />
+            <Route path="/delivery-seguimiento" element={
+              <ProtectedRoute>
+                <DeliverySeguimiento />
+              </ProtectedRoute>
+            } />
             <Route path="/menu" element={
               <ProtectedRoute>
                 <Navigate to="/scan" />
