@@ -35,8 +35,8 @@ exports.getById = async (req, res) => {
     if (!pedido) {
       return res.status(404).json({ error: 'Pedido no encontrado' });
     }
-    const mesa = await Mesa.findByPk(pedido.mesaId);
-    res.json({ ...pedido.toJSON(), numeroMesa: mesa?.numero });
+    const numeroMesa = pedido.mesaId === 'DELIVERY' ? '🚗 Delivery' : (await Mesa.findByPk(pedido.mesaId))?.numero;
+    res.json({ ...pedido.toJSON(), numeroMesa });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -178,16 +178,18 @@ exports.agregarItems = async (req, res) => {
       total: totalNuevo
     });
 
-    const mesa = await Mesa.findByPk(pedido.mesaId);
+    const numeroMesa = pedido.mesaId === 'DELIVERY' ? '🚗 Delivery' : (await Mesa.findByPk(pedido.mesaId))?.numero;
 
     req.io.to('admin').emit('pedido-actualizado', {
       ...pedido.toJSON(),
-      numeroMesa: mesa?.numero
+      numeroMesa
     });
-    req.io.to(`mesa-${pedido.mesaId}`).emit('pedido-actualizado', {
-      ...pedido.toJSON(),
-      numeroMesa: mesa?.numero
-    });
+    if (pedido.mesaId !== 'DELIVERY') {
+      req.io.to(`mesa-${pedido.mesaId}`).emit('pedido-actualizado', {
+        ...pedido.toJSON(),
+        numeroMesa
+      });
+    }
 
     res.json(pedido);
   } catch (error) {
@@ -224,12 +226,14 @@ exports.updateEstado = async (req, res) => {
 
     req.io.to('admin').emit('pedido-actualizado', {
       ...pedido.toJSON(),
-      numeroMesa: (await Mesa.findByPk(pedido.mesaId))?.numero
+      numeroMesa: pedido.mesaId === 'DELIVERY' ? '🚗 Delivery' : (await Mesa.findByPk(pedido.mesaId))?.numero
     });
-    req.io.to(`mesa-${pedido.mesaId}`).emit('pedido-actualizado', {
-      ...pedido.toJSON(),
-      numeroMesa: (await Mesa.findByPk(pedido.mesaId))?.numero
-    });
+    if (pedido.mesaId !== 'DELIVERY') {
+      req.io.to(`mesa-${pedido.mesaId}`).emit('pedido-actualizado', {
+        ...pedido.toJSON(),
+        numeroMesa: (await Mesa.findByPk(pedido.mesaId))?.numero
+      });
+    }
 
     res.json(pedido);
   } catch (error) {
@@ -266,12 +270,14 @@ exports.pagar = async (req, res) => {
 
     req.io.to('admin').emit('pedido-actualizado', {
       ...pedidoActualizado.toJSON(),
-      numeroMesa: (await Mesa.findByPk(pedido.mesaId))?.numero
+      numeroMesa: pedido.mesaId === 'DELIVERY' ? '🚗 Delivery' : (await Mesa.findByPk(pedido.mesaId))?.numero
     });
-    req.io.to(`mesa-${pedido.mesaId}`).emit('pedido-actualizado', {
-      ...pedidoActualizado.toJSON(),
-      numeroMesa: (await Mesa.findByPk(pedido.mesaId))?.numero
-    });
+    if (pedido.mesaId !== 'DELIVERY') {
+      req.io.to(`mesa-${pedido.mesaId}`).emit('pedido-actualizado', {
+        ...pedidoActualizado.toJSON(),
+        numeroMesa: (await Mesa.findByPk(pedido.mesaId))?.numero
+      });
+    }
 
     res.json(pedidoActualizado);
   } catch (error) {
@@ -347,12 +353,14 @@ exports.webhookMP = async (req, res) => {
 
           req.io.to('admin').emit('pedido-actualizado', {
             ...pedido.toJSON(),
-            numeroMesa: (await Mesa.findByPk(pedido.mesaId))?.numero
+            numeroMesa: pedido.mesaId === 'DELIVERY' ? '🚗 Delivery' : (await Mesa.findByPk(pedido.mesaId))?.numero
           });
-          req.io.to(`mesa-${pedido.mesaId}`).emit('pedido-actualizado', {
-            ...pedido.toJSON(),
-            numeroMesa: (await Mesa.findByPk(pedido.mesaId))?.numero
-          });
+          if (pedido.mesaId !== 'DELIVERY') {
+            req.io.to(`mesa-${pedido.mesaId}`).emit('pedido-actualizado', {
+              ...pedido.toJSON(),
+              numeroMesa: (await Mesa.findByPk(pedido.mesaId))?.numero
+            });
+          }
         }
       }
     }
