@@ -40,6 +40,19 @@ const Pedido = sequelize.define('Pedido', {
   transaccionCreada: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
+  },
+  deliveryInfo: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
+  tipoPedido: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: 'local'
+  },
+  paymentId: {
+    type: DataTypes.STRING,
+    allowNull: true
   }
 });
 

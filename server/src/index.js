@@ -104,6 +104,12 @@ const syncDatabase = async () => {
     try {
       await sequelize.query('ALTER TABLE "Usuarios" ADD COLUMN "verificado" BOOLEAN DEFAULT false');
     } catch (e) {}
+    try {
+      await sequelize.query('ALTER TABLE "Pedidos" ALTER COLUMN "mesaId" TYPE TEXT');
+    } catch (e) {}
+    try {
+      await sequelize.query('ALTER TABLE "Pedidos" ALTER COLUMN "clienteId" TYPE TEXT');
+    } catch (e) {}
     
     const Usuario = require('./models/Usuario');
     const adminExists = await Usuario.findOne({ where: { email: 'admin@piso0.com' } });
