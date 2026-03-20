@@ -8,11 +8,11 @@ const Pedido = sequelize.define('Pedido', {
     primaryKey: true
   },
   mesaId: {
-    type: DataTypes.UUID,
+    type: DataTypes.STRING,
     allowNull: false
   },
   clienteId: {
-    type: DataTypes.UUID,
+    type: DataTypes.STRING,
     allowNull: false
   },
   items: {
@@ -25,7 +25,7 @@ const Pedido = sequelize.define('Pedido', {
     defaultValue: 'pendiente'
   },
   tipoPago: {
-    type: DataTypes.ENUM('efectivo', 'tarjeta', 'mercadopago', 'qr'),
+    type: DataTypes.STRING,
     allowNull: true
   },
   total: {

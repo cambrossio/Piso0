@@ -416,40 +416,43 @@ exports.createDelivery = async (req, res) => {
   try {
     const { items, deliveryInfo, tipoPago, total, crearTransaccion, estado } = req.body;
 
-    const clienteId = req.body.clienteId || req.user?.id || 'delivery-user';
+    const clienteId = req.body.clienteId || (req.user ? req.user.id : null) || `guest-${Date.now()}`;
+
+    if (!items || items.length === 0) {
+      return res.status(400).json({ error: 'No hay productos en el pedido' });
+    }
 
     const pedidoData = {
       mesaId: 'DELIVERY',
-      clienteId,
+      clienteId: clienteId || `guest-${Date.now()}`,
       items: items.map(item => ({
-        productoId: item.productoId,
-        productoNombre: item.productoNombre,
-        cantidad: item.cantidad,
-        precioUnitario: item.precioUnitario
+        productoId: item.productoId || 'unknown',
+        productoNombre: item.productoNombre || item.nombre,
+        cantidad: item.cantidad || 1,
+        precioUnitario: item.precioUnitario || item.precio || 0
       })),
-      total,
+      total: parseFloat(total) || 0,
       estado: estado || 'pendiente',
-      tipoPago: tipoPago
+      tipoPago: tipoPago,
+      deliveryInfo: deliveryInfo || {},
+      tipoPedido: 'delivery'
     };
-
-    try {
-      pedidoData.deliveryInfo = deliveryInfo;
-      pedidoData.tipoPedido = 'delivery';
-    } catch (e) {}
 
     const pedido = await Pedido.create(pedidoData);
 
     if (crearTransaccion) {
-      await Transaccion.create({
-        tipo: 'ingreso',
-        categoria: 'Delivery',
-        monto: total,
-        descripcion: `Delivery #${pedido.id.slice(0, 8)} - ${deliveryInfo.nombre} - MercadoPago`,
-        pedidoId: pedido.id
-      });
       try {
+        await Transaccion.create({
+          tipo: 'ingreso',
+          categoria: 'Delivery',
+          monto: parseFloat(total) || 0,
+          descripcion: `Delivery #${pedido.id.slice(0, 8)} - ${(deliveryInfo && deliveryInfo.nombre) ? deliveryInfo.nombre : 'Cliente'} - MercadoPago`,
+          pedidoId: pedido.id
+        });
         await pedido.update({ transaccionCreada: true });
-      } catch (e) {}
+      } catch (e) {
+        console.error('Error creando transacción:', e);
+      }
     }
 
     req.io.to('admin').emit('nuevo-pedido', {
