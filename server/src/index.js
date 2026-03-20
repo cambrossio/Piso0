@@ -107,26 +107,62 @@ const syncDatabase = async () => {
       await sequelize.query('ALTER TABLE "Usuarios" ADD COLUMN "verificado" BOOLEAN DEFAULT false');
     } catch (e) {}
     try {
-      const [results] = await sequelize.query("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'Pedidos' AND column_name IN ('mesaId', 'clienteId')");
-      console.log('Current Pedidos columns:', JSON.stringify(results));
-      if (results.length > 0 && results[0].data_type === 'uuid') {
-        await sequelize.query('ALTER TABLE "Pedidos" ADD COLUMN "mesaId_text" TEXT');
-        await sequelize.query('UPDATE "Pedidos" SET "mesaId_text" = "mesaId"::TEXT');
-        await sequelize.query('ALTER TABLE "Pedidos" DROP COLUMN "mesaId"');
-        await sequelize.query('ALTER TABLE "Pedidos" RENAME COLUMN "mesaId_text" TO "mesaId"');
-        console.log('mesaId migrated to TEXT');
+      await sequelize.query(`
+        CREATE TABLE IF NOT EXISTS "Pedidos_new" (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          "mesaId" TEXT NOT NULL,
+          "clienteId" TEXT NOT NULL,
+          items JSONB NOT NULL DEFAULT '[]',
+          estado TEXT DEFAULT 'pendiente',
+          "tipoPago" TEXT,
+          total DECIMAL(10,2) NOT NULL DEFAULT 0,
+          "motivoCancelacion" TEXT,
+          "transaccionCreada" BOOLEAN DEFAULT false,
+          "deliveryInfo" TEXT,
+          "tipoPedido" TEXT,
+          "paymentId" TEXT,
+          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      
+      await sequelize.query(`
+        INSERT INTO "Pedidos_new" (id, "mesaId", "clienteId", items, estado, "tipoPago", total, "motivoCancelacion", "transaccionCreada", "deliveryInfo", "tipoPedido", "paymentId", "createdAt", "updatedAt")
+        SELECT 
+          id, 
+          "mesaId"::TEXT, 
+          "clienteId"::TEXT, 
+          items, 
+          estado, 
+          "tipoPago", 
+          total, 
+          "motivoCancelacion", 
+          "transaccionCreada", 
+          "deliveryInfo"::TEXT, 
+          "tipoPedido", 
+          "paymentId",
+          "createdAt", 
+          "updatedAt"
+        FROM "Pedidos"
+        ON CONFLICT (id) DO NOTHING
+      `);
+      
+      await sequelize.query('DROP TABLE IF EXISTS "Pedidos_old"');
+      await sequelize.query('ALTER TABLE "Pedidos" RENAME TO "Pedidos_old"');
+      await sequelize.query('ALTER TABLE "Pedidos_new" RENAME TO "Pedidos"');
+      
+      console.log('Pedidos table migrated successfully!');
+    } catch (e) { 
+      console.log('Migration error:', e.message); 
+      console.log('Trying alternative method...');
+      try {
+        await sequelize.query('ALTER TABLE "Pedidos" ALTER COLUMN "mesaId" TYPE TEXT');
+        await sequelize.query('ALTER TABLE "Pedidos" ALTER COLUMN "clienteId" TYPE TEXT');
+        console.log('Alternative migration worked!');
+      } catch (e2) {
+        console.log('Alternative migration also failed:', e2.message);
       }
-    } catch (e) { console.log('mesaId migration error:', e.message); }
-    try {
-      const [results] = await sequelize.query("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'Pedidos' AND column_name = 'clienteId'");
-      if (results.length > 0 && results[0].data_type === 'uuid') {
-        await sequelize.query('ALTER TABLE "Pedidos" ADD COLUMN "clienteId_text" TEXT');
-        await sequelize.query('UPDATE "Pedidos" SET "clienteId_text" = "clienteId"::TEXT');
-        await sequelize.query('ALTER TABLE "Pedidos" DROP COLUMN "clienteId"');
-        await sequelize.query('ALTER TABLE "Pedidos" RENAME COLUMN "clienteId_text" TO "clienteId"');
-        console.log('clienteId migrated to TEXT');
-      }
-    } catch (e) { console.log('clienteId migration error:', e.message); }
+    }
     try {
       await sequelize.query('ALTER TABLE "Pedidos" ADD COLUMN "paymentId" TEXT');
     } catch (e) {}
