@@ -82,31 +82,26 @@ const PORT = process.env.PORT || 8000;
 
 const syncDatabase = async () => {
   try {
+    console.log('Starting database sync...');
     await sequelize.sync({ force: false });
     console.log('Base de datos sincronizada');
     
     const Pedido = require('./models/Pedido');
-    const { DataTypes } = require('sequelize');
     
-    try {
-      await sequelize.query('ALTER TABLE "Pedidos" ADD COLUMN "transaccionCreada" BOOLEAN DEFAULT false');
-    } catch (e) {}
-    try {
-      await sequelize.query('ALTER TABLE "Pedidos" ADD COLUMN "deliveryInfo" TEXT');
-    } catch (e) {}
-    try {
-      await sequelize.query('ALTER TABLE "Pedidos" ADD COLUMN "tipoPedido" TEXT');
-    } catch (e) {}
-    try {
-      await sequelize.query('ALTER TABLE "Usuarios" ADD COLUMN "telefono" TEXT');
-    } catch (e) {}
-    try {
-      await sequelize.query('ALTER TABLE "Usuarios" ADD COLUMN "direccion" TEXT');
-    } catch (e) {}
-    try {
-      await sequelize.query('ALTER TABLE "Usuarios" ADD COLUMN "verificado" BOOLEAN DEFAULT false');
-    } catch (e) {}
-    try {
+    console.log('Checking Pedidos table schema...');
+    const [cols] = await sequelize.query(`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'Pedidos' 
+      AND column_name IN ('mesaId', 'clienteId')
+    `);
+    console.log('Current columns:', JSON.stringify(cols));
+    
+    const needsMigration = cols.some(c => c.data_type === 'uuid');
+    
+    if (needsMigration) {
+      console.log('Migrating Pedidos table from UUID to TEXT...');
+      
       await sequelize.query(`
         CREATE TABLE IF NOT EXISTS "Pedidos_new" (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -125,9 +120,10 @@ const syncDatabase = async () => {
           "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
+      console.log('Created Pedidos_new table');
       
       await sequelize.query(`
-        INSERT INTO "Pedidos_new" (id, "mesaId", "clienteId", items, estado, "tipoPago", total, "motivoCancelacion", "transaccionCreada", "deliveryInfo", "tipoPedido", "paymentId", "createdAt", "updatedAt")
+        INSERT INTO "Pedidos_new" 
         SELECT 
           id, 
           "mesaId"::TEXT, 
@@ -144,30 +140,36 @@ const syncDatabase = async () => {
           "createdAt", 
           "updatedAt"
         FROM "Pedidos"
-        ON CONFLICT (id) DO NOTHING
       `);
+      console.log('Copied data to Pedidos_new');
       
-      await sequelize.query('DROP TABLE IF EXISTS "Pedidos_old"');
-      await sequelize.query('ALTER TABLE "Pedidos" RENAME TO "Pedidos_old"');
+      await sequelize.query('ALTER TABLE "Pedidos" RENAME TO "Pedidos_backup"');
       await sequelize.query('ALTER TABLE "Pedidos_new" RENAME TO "Pedidos"');
-      
-      console.log('Pedidos table migrated successfully!');
-    } catch (e) { 
-      console.log('Migration error:', e.message); 
-      console.log('Trying alternative method...');
-      try {
-        await sequelize.query('ALTER TABLE "Pedidos" ALTER COLUMN "mesaId" TYPE TEXT');
-        await sequelize.query('ALTER TABLE "Pedidos" ALTER COLUMN "clienteId" TYPE TEXT');
-        console.log('Alternative migration worked!');
-      } catch (e2) {
-        console.log('Alternative migration also failed:', e2.message);
-      }
+      console.log('Swapped tables - migration complete!');
+    } else {
+      console.log('mesaId/clienteId already TEXT, skipping migration');
     }
+    
     try {
-      await sequelize.query('ALTER TABLE "Pedidos" ADD COLUMN "paymentId" TEXT');
+      await sequelize.query('ALTER TABLE "Pedidos" ADD COLUMN IF NOT EXISTS "transaccionCreada" BOOLEAN DEFAULT false');
     } catch (e) {}
     try {
-      await sequelize.query('ALTER TABLE "Transaccions" ADD COLUMN "pedidoId" TEXT');
+      await sequelize.query('ALTER TABLE "Pedidos" ADD COLUMN IF NOT EXISTS "deliveryInfo" TEXT');
+    } catch (e) {}
+    try {
+      await sequelize.query('ALTER TABLE "Pedidos" ADD COLUMN IF NOT EXISTS "tipoPedido" TEXT');
+    } catch (e) {}
+    try {
+      await sequelize.query('ALTER TABLE "Pedidos" ADD COLUMN IF NOT EXISTS "paymentId" TEXT');
+    } catch (e) {}
+    try {
+      await sequelize.query('ALTER TABLE "Usuarios" ADD COLUMN IF NOT EXISTS "telefono" TEXT');
+    } catch (e) {}
+    try {
+      await sequelize.query('ALTER TABLE "Usuarios" ADD COLUMN IF NOT EXISTS "direccion" TEXT');
+    } catch (e) {}
+    try {
+      await sequelize.query('ALTER TABLE "Usuarios" ADD COLUMN IF NOT EXISTS "verificado" BOOLEAN DEFAULT false');
     } catch (e) {}
     
     const Usuario = require('./models/Usuario');
