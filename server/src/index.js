@@ -172,6 +172,33 @@ const syncDatabase = async () => {
       await sequelize.query('ALTER TABLE "Usuarios" ADD COLUMN IF NOT EXISTS "verificado" BOOLEAN DEFAULT false');
     } catch (e) {}
     
+    console.log('Checking Transaccions table schema...');
+    const [transCols] = await sequelize.query(`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'Transaccions' 
+      AND column_name = 'pedidoId'
+    `);
+    console.log('Transaccions pedidoId column:', JSON.stringify(transCols));
+    
+    if (transCols.length > 0 && transCols[0].data_type === 'uuid') {
+      console.log('Migrating Transaccions pedidoId from UUID to TEXT...');
+      try {
+        await sequelize.query('ALTER TABLE "Transaccions" DROP CONSTRAINT IF EXISTS "fk_pedido"');
+      } catch (e) {
+        console.log('No fk_pedido constraint to drop:', e.message);
+      }
+      try {
+        await sequelize.query('ALTER TABLE "Transaccions" ADD COLUMN "pedidoId_text" TEXT');
+        await sequelize.query('UPDATE "Transaccions" SET "pedidoId_text" = "pedidoId"::TEXT WHERE "pedidoId" IS NOT NULL');
+        await sequelize.query('ALTER TABLE "Transaccions" DROP COLUMN "pedidoId"');
+        await sequelize.query('ALTER TABLE "Transaccions" RENAME COLUMN "pedidoId_text" TO "pedidoId"');
+        console.log('Transaccions pedidoId migrated to TEXT');
+      } catch (e) {
+        console.log('Transaccions migration error:', e.message);
+      }
+    }
+    
     const Usuario = require('./models/Usuario');
     const adminExists = await Usuario.findOne({ where: { email: 'admin@piso0.com' } });
     

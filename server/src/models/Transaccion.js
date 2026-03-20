@@ -24,7 +24,7 @@ const Transaccion = sequelize.define('Transaccion', {
     allowNull: true
   },
   pedidoId: {
-    type: DataTypes.UUID,
+    type: DataTypes.STRING,
     allowNull: true
   }
 });
