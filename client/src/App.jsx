@@ -9,6 +9,7 @@ import AdminMesas from './pages/AdminMesas';
 import AdminPedidos from './pages/AdminPedidos';
 import AdminContabilidad from './pages/AdminContabilidad';
 import AdminAdministracion from './pages/AdminAdministracion';
+import AdminConfiguracion from './pages/AdminConfiguracion';
 import ClienteMenu from './pages/ClienteMenu';
 import ClientePedido from './pages/ClientePedido';
 import ClientePago from './pages/ClientePago';
@@ -78,6 +79,11 @@ function App() {
             <Route path="/admin/administracion" element={
               <ProtectedRoute adminOnly>
                 <AdminAdministracion />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/configuracion" element={
+              <ProtectedRoute adminOnly>
+                <AdminConfiguracion />
               </ProtectedRoute>
             } />
             <Route path="/scan" element={

@@ -11,6 +11,8 @@ export default function MenuDelivery() {
   const [carrito, setCarrito] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mostrarCarrito, setMostrarCarrito] = useState(false);
+  const [deliveryAvailable, setDeliveryAvailable] = useState(true);
+  const [deliveryStatus, setDeliveryStatus] = useState(null);
   const { addToast } = useToast();
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -22,8 +24,20 @@ export default function MenuDelivery() {
       navigate('/seleccionar-modo');
       return;
     }
+    checkDeliveryAvailability();
     fetchProductos();
   }, []);
+
+  const checkDeliveryAvailability = async () => {
+    try {
+      const res = await api.get('/config/delivery-check');
+      setDeliveryAvailable(res.data.available);
+      setDeliveryStatus(res.data);
+    } catch (err) {
+      console.error(err);
+      setDeliveryAvailable(true);
+    }
+  };
 
   const fetchProductos = async () => {
     try {
@@ -106,7 +120,32 @@ export default function MenuDelivery() {
         <p style={{ fontSize: '13px' }}>
           📞 {deliveryInfo.telefono}
         </p>
+        {deliveryStatus && (
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px' }}>
+            🕐 Horario: {deliveryStatus.schedule?.startHour}:{String(deliveryStatus.schedule?.startMinute || 0).padStart(2, '0')} - {deliveryStatus.schedule?.endHour}:{String(deliveryStatus.schedule?.endMinute || 0).padStart(2, '0')}
+          </p>
+        )}
       </div>
+
+      {!deliveryAvailable && (
+        <div style={{ 
+          background: 'var(--error)', 
+          padding: '16px', 
+          borderRadius: '8px', 
+          marginBottom: '20px',
+          textAlign: 'center'
+        }}>
+          <h3 style={{ margin: '0 0 8px 0' }}>⚠️ Delivery no disponible</h3>
+          <p style={{ margin: 0 }}>
+            {deliveryStatus?.reason || 'No se puede pedir delivery en este momento'}
+          </p>
+          {deliveryStatus?.currentTime && (
+            <p style={{ margin: '8px 0 0 0', fontSize: '13px' }}>
+              Hora actual: {deliveryStatus.currentTime}
+            </p>
+          )}
+        </div>
+      )}
    
 
       <div className="flex gap-10" style={{ marginBottom: '20px', overflowX: 'auto', paddingBottom: '8px' }}>
@@ -170,7 +209,7 @@ export default function MenuDelivery() {
             <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Total</span>
             <h3 style={{ margin: 0, color: 'var(--gold)' }}>${total}</h3>
           </div>
-          <button onClick={confirmarPedido} className="btn btn-primary" style={{ padding: '12px 24px' }}>
+          <button onClick={confirmarPedido} className="btn btn-primary" style={{ padding: '12px 24px' }} disabled={!deliveryAvailable}>
             Confirmar Pedido
           </button>
         </div>

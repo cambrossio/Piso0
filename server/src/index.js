@@ -13,6 +13,7 @@ const mesaRoutes = require('./routes/mesas');
 const pedidoRoutes = require('./routes/pedidos');
 const transaccionRoutes = require('./routes/transacciones');
 const backupRoutes = require('./routes/backup');
+const configRoutes = require('./routes/config');
 
 const app = express();
 const server = http.createServer(app);
@@ -44,6 +45,7 @@ app.use('/api/mesas', mesaRoutes);
 app.use('/api/pedidos', pedidoRoutes);
 app.use('/api/transacciones', transaccionRoutes);
 app.use('/api/backup', backupRoutes);
+app.use('/api/config', configRoutes);
 
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../../client/dist')));
@@ -205,6 +207,8 @@ const syncDatabase = async () => {
     } catch (e) {
       console.log('Enum enviando may already exist:', e.message);
     }
+    
+    const Config = require('./models/Config');
     
     const Usuario = require('./models/Usuario');
     const adminExists = await Usuario.findOne({ where: { email: 'admin@piso0.com' } });
