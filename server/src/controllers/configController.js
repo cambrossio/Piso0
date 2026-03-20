@@ -52,12 +52,17 @@ exports.checkDeliveryAvailable = async (req, res) => {
     }
 
     const now = new Date();
-    const dayOfWeek = now.getDay();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
+    const options = { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', hour12: false };
+    const timeString = now.toLocaleTimeString('es-AR', options);
+    const [currentHour, currentMinute] = timeString.split(':').map(Number);
     const currentTime = currentHour * 60 + currentMinute;
     const startTime = schedule.startHour * 60 + schedule.startMinute;
     const endTime = schedule.endHour * 60 + schedule.endMinute;
+
+    const dayOptions = { timeZone: 'America/Argentina/Buenos_Aires', weekday: 'long' };
+    const dayName = now.toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', weekday: 'short' });
+    const dayMap = { 'dom': 0, 'lun': 1, 'mar': 2, 'mié': 3, 'jue': 4, 'vie': 5, 'sáb': 6 };
+    const dayOfWeek = dayMap[dayName] ?? now.getDay();
 
     const dayAvailable = schedule.days.includes(dayOfWeek);
     const timeAvailable = currentTime >= startTime && currentTime <= endTime;
@@ -69,7 +74,8 @@ exports.checkDeliveryAvailable = async (req, res) => {
               !dayAvailable ? 'No disponible hoy' :
               !timeAvailable ? 'Fuera de horario' : null,
       schedule: schedule,
-      currentTime: `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`
+      currentTime: timeString,
+      timezone: 'America/Argentina/Buenos_Aires'
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

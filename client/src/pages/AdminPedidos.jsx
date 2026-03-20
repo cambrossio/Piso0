@@ -28,11 +28,13 @@ export default function AdminPedidos() {
     joinAdmin();
 
     socket.on('nuevo-pedido', (pedido) => {
-      setPedidos(prev => [pedido, ...prev]);
+      const esDelivery = pedido.tipoPedido === 'delivery' || pedido.mesaId === 'DELIVERY';
+      setPedidos(prev => [{ ...pedido, esDelivery }, ...prev]);
     });
 
     socket.on('pedido-actualizado', (pedido) => {
-      setPedidos(prev => prev.map(p => p.id === pedido.id ? pedido : p));
+      const esDelivery = pedido.tipoPedido === 'delivery' || pedido.mesaId === 'DELIVERY';
+      setPedidos(prev => prev.map(p => p.id === pedido.id ? { ...pedido, esDelivery } : p));
     });
 
     socket.on('cierre-dia', () => {
