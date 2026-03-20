@@ -107,11 +107,26 @@ const syncDatabase = async () => {
       await sequelize.query('ALTER TABLE "Usuarios" ADD COLUMN "verificado" BOOLEAN DEFAULT false');
     } catch (e) {}
     try {
-      await sequelize.query('ALTER TABLE "Pedidos" ALTER COLUMN "mesaId" TYPE TEXT USING "mesaId"::TEXT');
-    } catch (e) {}
+      const [results] = await sequelize.query("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'Pedidos' AND column_name IN ('mesaId', 'clienteId')");
+      console.log('Current Pedidos columns:', JSON.stringify(results));
+      if (results.length > 0 && results[0].data_type === 'uuid') {
+        await sequelize.query('ALTER TABLE "Pedidos" ADD COLUMN "mesaId_text" TEXT');
+        await sequelize.query('UPDATE "Pedidos" SET "mesaId_text" = "mesaId"::TEXT');
+        await sequelize.query('ALTER TABLE "Pedidos" DROP COLUMN "mesaId"');
+        await sequelize.query('ALTER TABLE "Pedidos" RENAME COLUMN "mesaId_text" TO "mesaId"');
+        console.log('mesaId migrated to TEXT');
+      }
+    } catch (e) { console.log('mesaId migration error:', e.message); }
     try {
-      await sequelize.query('ALTER TABLE "Pedidos" ALTER COLUMN "clienteId" TYPE TEXT USING "clienteId"::TEXT');
-    } catch (e) {}
+      const [results] = await sequelize.query("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'Pedidos' AND column_name = 'clienteId'");
+      if (results.length > 0 && results[0].data_type === 'uuid') {
+        await sequelize.query('ALTER TABLE "Pedidos" ADD COLUMN "clienteId_text" TEXT');
+        await sequelize.query('UPDATE "Pedidos" SET "clienteId_text" = "clienteId"::TEXT');
+        await sequelize.query('ALTER TABLE "Pedidos" DROP COLUMN "clienteId"');
+        await sequelize.query('ALTER TABLE "Pedidos" RENAME COLUMN "clienteId_text" TO "clienteId"');
+        console.log('clienteId migrated to TEXT');
+      }
+    } catch (e) { console.log('clienteId migration error:', e.message); }
     try {
       await sequelize.query('ALTER TABLE "Pedidos" ADD COLUMN "paymentId" TEXT');
     } catch (e) {}
