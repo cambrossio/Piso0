@@ -12,6 +12,7 @@ const productoRoutes = require('./routes/productos');
 const mesaRoutes = require('./routes/mesas');
 const pedidoRoutes = require('./routes/pedidos');
 const transaccionRoutes = require('./routes/transacciones');
+const backupRoutes = require('./routes/backup');
 
 const app = express();
 const server = http.createServer(app);
@@ -42,6 +43,7 @@ app.use('/api/productos', productoRoutes);
 app.use('/api/mesas', mesaRoutes);
 app.use('/api/pedidos', pedidoRoutes);
 app.use('/api/transacciones', transaccionRoutes);
+app.use('/api/backup', backupRoutes);
 
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../../client/dist')));
