@@ -37,8 +37,6 @@ export default function AdminContabilidad() {
   const [pedidoParaTicket, setPedidoParaTicket] = useState(null);
   const [filtroFechaComandas, setFiltroFechaComandas] = useState('');
   const [filtroCategoria, setFiltroCategoria] = useState('');
-  const [showRestoreModal, setShowRestoreModal] = useState(false);
-  const [restoreFile, setRestoreFile] = useState(null);
 
   const categoriasGasto = ['Insumos', 'Servicios', 'Salarios', 'Alquiler', 'Mantenimiento', 'Otros'];
 
@@ -230,43 +228,6 @@ export default function AdminContabilidad() {
     }
   };
 
-  const crearBackup = async () => {
-    try {
-      const res = await api.get('/backup');
-      const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `piso0-backup-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      addToast('Backup descargado correctamente', 'success');
-    } catch (err) {
-      addToast('Error al crear backup', 'error');
-    }
-  };
-
-  const handleRestore = async () => {
-    if (!restoreFile) return;
-    try {
-      const text = await restoreFile.text();
-      const data = JSON.parse(text);
-      if (!data.data || !data.data.pedidos || !data.data.productos) {
-        addToast('Archivo de backup inválido', 'error');
-        return;
-      }
-      if (!window.confirm('¿Estás seguro? Esto reemplazará todos los datos actuales.')) return;
-      await api.post('/backup/restore', data);
-      addToast('Backup restaurado correctamente. Recargando...', 'success');
-      setShowRestoreModal(false);
-      setTimeout(() => window.location.reload(), 1500);
-    } catch (err) {
-      addToast('Error al restaurar backup', 'error');
-    }
-  };
-
   if (loading) {
     return <div className="container">Cargando...</div>;
   }
@@ -319,8 +280,6 @@ export default function AdminContabilidad() {
           
           <button onClick={() => setShowModal(true)} className="btn btn-primary">+ Gasto</button>
           <button onClick={() => setShowModalIngreso(true)} className="btn btn-success">+ Ingreso</button>
-          <button onClick={crearBackup} className="btn btn-secondary">💾 Backup</button>
-          <button onClick={() => setShowRestoreModal(true)} className="btn btn-secondary">📂 Restaurar</button>
         </div>
       </div>
 
@@ -750,39 +709,6 @@ export default function AdminContabilidad() {
                 Confirmar Ingreso
               </button>
             </form>
-          </div>
-        </div>
-      )}
-
-      {showRestoreModal && (
-        <div className="modal-overlay" onClick={() => setShowRestoreModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>📂 Restaurar Backup</h2>
-              <button onClick={() => setShowRestoreModal(false)} className="modal-close">×</button>
-            </div>
-
-            <p style={{ marginBottom: '20px', color: 'var(--warning)' }}>
-              ⚠️ ADVERTENCIA: Restaurar un backup reemplazará TODOS los datos actuales.
-            </p>
-
-            <div className="form-group">
-              <label>Seleccionar archivo de backup (.json)</label>
-              <input
-                type="file"
-                accept=".json"
-                onChange={e => setRestoreFile(e.target.files[0])}
-              />
-            </div>
-
-            <button 
-              onClick={handleRestore} 
-              className="btn btn-warning" 
-              style={{ width: '100%', marginTop: '16px' }}
-              disabled={!restoreFile}
-            >
-              Restaurar Datos
-            </button>
           </div>
         </div>
       )}

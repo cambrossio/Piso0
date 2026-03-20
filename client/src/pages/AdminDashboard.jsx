@@ -110,6 +110,7 @@ export default function AdminDashboard() {
           <Link to="/admin/mesas" className="btn btn-secondary">Mesas</Link>
           <Link to="/admin/pedidos" className="btn btn-secondary">Pedidos</Link>
           <Link to="/admin/contabilidad" className="btn btn-secondary">Contabilidad</Link>
+          <Link to="/admin/administracion" className="btn btn-secondary">Administración</Link>
         </div>
       </nav>
 
