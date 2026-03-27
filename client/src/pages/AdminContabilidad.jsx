@@ -237,7 +237,7 @@ export default function AdminContabilidad() {
       <div className="flex flex-between" style={{ marginBottom: '32px' }}>
         <div className="flex items-center gap-20">
           <img src="/img/pisocero.png" alt="Piso0" style={{ height: '60px', width: 'auto' }} />
-          <h1 style={{ margin: 10 }}>Contabilidad</h1>
+          <h1 style={{ margin: 10 }}>Caja</h1>
         </div>
         <div className="flex gap-10">
           <Link to="/admin" className="btn btn-secondary">← Volver</Link>
